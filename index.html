@@ -215,6 +215,41 @@ body{background:#f8e9ee !important}
 .sync-status.error{color:#c85d6c}
 </style>
 
+
+<style>
+/* v9 - color markers */
+.ev{display:block;width:max-content;max-width:100%;padding:1px 5px 1px 3px;border-radius:5px}
+.task .txt{padding:2px 5px;border-radius:5px}
+.mark-pink{background:#fbe3eb}
+.mark-yellow{background:#fff2bd}
+.mark-blue{background:#dfeffc}
+.mark-green{background:#e2f2e4}
+.mark-purple{background:#eee5f7}
+
+.color-picker{display:flex;align-items:center;gap:7px;margin-top:12px}
+.color-picker .color-label{font-size:12px;color:var(--muted);margin-right:2px}
+.color-dot{width:19px;height:19px;border-radius:50%;border:1px solid #ddd;cursor:pointer;padding:0;position:relative}
+.color-dot[data-color=""]{background:#fff}
+.color-dot[data-color="pink"]{background:#f5cbd9}
+.color-dot[data-color="yellow"]{background:#f7df83}
+.color-dot[data-color="blue"]{background:#bcdcf2}
+.color-dot[data-color="green"]{background:#c5e5c9}
+.color-dot[data-color="purple"]{background:#d8c4e9}
+.color-dot.selected{box-shadow:0 0 0 2px #fff,0 0 0 4px #9c7c88}
+
+.add{align-items:center}
+.task-color{position:relative;flex:0 0 auto}
+.task-color-btn{width:17px;height:17px;border-radius:50%;border:1px solid #d8d2d4;background:#fff;cursor:pointer;padding:0}
+.task-color-btn.pink{background:#f5cbd9}
+.task-color-btn.yellow{background:#f7df83}
+.task-color-btn.blue{background:#bcdcf2}
+.task-color-btn.green{background:#c5e5c9}
+.task-color-btn.purple{background:#d8c4e9}
+.task-palette{display:none;position:absolute;z-index:20;bottom:24px;left:0;background:#fff;border:1px solid var(--line);border-radius:10px;padding:7px;box-shadow:0 7px 20px #0002;gap:6px}
+.task-palette.on{display:flex}
+.task-palette .color-dot{width:17px;height:17px}
+</style>
+
 </head>
 <body>
 <div class="app">
@@ -231,7 +266,16 @@ body{background:#f8e9ee !important}
   </section>
  </main>
 </div>
-<div class="modal" id="modal"><div class="box"><h2 id="modalDate">일정 추가</h2><input id="eventText" placeholder="이 날짜의 주요 일정을 입력하세요"><div class="actions"><button id="cancel">취소</button><button class="save" id="save">저장</button></div></div></div>
+<div class="modal" id="modal"><div class="box"><h2 id="modalDate">일정 추가</h2><input id="eventText" placeholder="이 날짜의 주요 일정을 입력하세요">
+<div class="color-picker" id="eventColors">
+  <span class="color-label">색상</span>
+  <button type="button" class="color-dot selected" data-color="" title="무색"></button>
+  <button type="button" class="color-dot" data-color="pink" title="핑크"></button>
+  <button type="button" class="color-dot" data-color="yellow" title="노랑"></button>
+  <button type="button" class="color-dot" data-color="blue" title="파랑"></button>
+  <button type="button" class="color-dot" data-color="green" title="초록"></button>
+  <button type="button" class="color-dot" data-color="purple" title="보라"></button>
+</div><div class="actions"><button id="cancel">취소</button><button class="save" id="save">저장</button></div></div></div>
 <script>
 
 const $=s=>document.querySelector(s);
@@ -276,13 +320,14 @@ function rebuildState(rows){
 
   serverRows.forEach(r=>{
     if(r.type==='event'){
-      (events[r.date]??=[]).push({id:r.id,text:String(r.content??'')});
+      (events[r.date]??=[]).push({id:r.id,text:String(r.content??''),color:String(r.color??r.colour??'')});
     }else if(r.type==='task'){
       (tasks[r.date]??=[]).push({
         id:r.id,
         text:String(r.content??''),
         done:r.done===true || String(r.done).toLowerCase()==='true',
-        col:Number(r.position)||0
+        col:Number(r.position)||0,
+        color:String(r.color??r.colour??'')
       });
     }else if(r.type==='note'){
       notes[`${r.date}:${r.position}`]={id:r.id,text:String(r.content??'')};
@@ -415,13 +460,14 @@ function renderCal(){
    return `<div class="day ${other?'other':''} ${sel?'selected':''} ${tod?'today':''} ${hol?'holiday':''} ${dow===0?'sunday':''} ${dow===6?'saturday':''}" data-k="${k}">
      <span class="num">${d.getDate()}</span>
      ${hol?`<div class="holiday-name">${hol}</div>`:''}
-     ${(events[k]||[]).slice(0,hol?2:3).map(e=>`<div class="ev">${esc(e.text)}</div>`).join('')}
+     ${(events[k]||[]).slice(0,hol?2:3).map(e=>`<div class="ev ${e.color?'mark-'+e.color:''}">${esc(e.text)}</div>`).join('')}
    </div>`
  }).join('');
  document.querySelectorAll('.day').forEach(el=>el.onclick=()=>{
    let [y,m,d]=el.dataset.k.split('-').map(Number);
    selected=new Date(y,m-1,d);weekStart=monday(selected);renderCal();renderWeek();
    modalKey=el.dataset.k;$('#modalDate').textContent=`${m}월 ${d}일 일정`;$('#eventText').value='';
+   setEventColor('');
    $('#modal').classList.add('on');$('#eventText').focus()
  })
 }
@@ -439,11 +485,22 @@ function renderWeek(){
      <div class="taskcol">
        ${items.map(t=>`<div class="task ${t.done?'done':''}">
          <input type="checkbox" data-id="${t.id}" ${t.done?'checked':''}>
-         <div class="txt">${esc(t.text)}</div>
+         <div class="txt ${t.color?'mark-'+t.color:''}">${esc(t.text)}</div>
          <button class="x" data-del="${t.id}">×</button>
        </div>`).join('')}
        <div class="add">
-         <input data-add="${k}" data-col="${col}" placeholder="${items.length>=3?'최대 3개':'+ 할 일'}" ${items.length>=3?'disabled':''}>
+         <div class="task-color">
+           <button type="button" class="task-color-btn" data-colorbtn="${k}" data-col="${col}" title="색상"></button>
+           <div class="task-palette" data-palette="${k}" data-col="${col}">
+             <button type="button" class="color-dot" data-pick="" title="무색"></button>
+             <button type="button" class="color-dot" data-pick="pink" data-color="pink" title="핑크"></button>
+             <button type="button" class="color-dot" data-pick="yellow" data-color="yellow" title="노랑"></button>
+             <button type="button" class="color-dot" data-pick="blue" data-color="blue" title="파랑"></button>
+             <button type="button" class="color-dot" data-pick="green" data-color="green" title="초록"></button>
+             <button type="button" class="color-dot" data-pick="purple" data-color="purple" title="보라"></button>
+           </div>
+         </div>
+         <input data-add="${k}" data-col="${col}" data-color="" placeholder="${items.length>=3?'최대 3개':'+ 할 일'}" ${items.length>=3?'disabled':''}>
          <button data-plus="${k}" data-col="${col}" ${items.length>=3?'disabled':''}>↵</button>
        </div>
      </div>`;
@@ -475,6 +532,23 @@ function renderWeek(){
    const input=document.querySelector(`[data-add="${b.dataset.plus}"][data-col="${b.dataset.col}"]`);
    addTask(b.dataset.plus,input,+b.dataset.col)
  });
+ document.querySelectorAll('[data-colorbtn]').forEach(btn=>btn.onclick=e=>{
+   e.stopPropagation();
+   const p=document.querySelector(`[data-palette="${btn.dataset.colorbtn}"][data-col="${btn.dataset.col}"]`);
+   document.querySelectorAll('.task-palette.on').forEach(x=>{if(x!==p)x.classList.remove('on')});
+   p.classList.toggle('on');
+ });
+ document.querySelectorAll('[data-pick]').forEach(dot=>dot.onclick=e=>{
+   e.stopPropagation();
+   const p=dot.closest('.task-palette');
+   const k=p.dataset.palette, col=p.dataset.col, color=dot.dataset.pick||'';
+   const input=document.querySelector(`[data-add="${k}"][data-col="${col}"]`);
+   const btn=document.querySelector(`[data-colorbtn="${k}"][data-col="${col}"]`);
+   input.dataset.color=color;
+   btn.className='task-color-btn'+(color?' '+color:'');
+   p.classList.remove('on');
+   input.focus();
+ });
 }
 
 async function addTask(k,input,col=0){
@@ -483,8 +557,9 @@ async function addTask(k,input,col=0){
  if(count>=3){alert('한 칸에는 할 일을 최대 3개까지 입력할 수 있어요.');return}
  input.value='';
  try{
-   const r=await apiPost({action:'add',type:'task',date:k,position:String(col),content:v,done:false});
-   (tasks[k]??=[]).push({id:r.id,text:v,done:false,col});
+   const color=input.dataset.color||'';
+   const r=await apiPost({action:'add',type:'task',date:k,position:String(col),content:v,done:false,color});
+   (tasks[k]??=[]).push({id:r.id,text:v,done:false,col,color});
    renderWeek();
  }catch(e){console.error(e);setSync('저장 실패','error');alert('할 일을 저장하지 못했습니다.')}
 }
@@ -526,6 +601,15 @@ $('#nm').onclick=()=>{month.setMonth(month.getMonth()+1);renderCal()};
 $('#pw').onclick=()=>{weekStart.setDate(weekStart.getDate()-7);selected=new Date(weekStart);month=new Date(selected.getFullYear(),selected.getMonth(),1);renderCal();renderWeek()};
 $('#nw').onclick=()=>{weekStart.setDate(weekStart.getDate()+7);selected=new Date(weekStart);month=new Date(selected.getFullYear(),selected.getMonth(),1);renderCal();renderWeek()};
 $('#tw').onclick=()=>{selected=new Date(now);weekStart=monday(now);month=new Date(now.getFullYear(),now.getMonth(),1);renderCal();renderWeek()};
+
+let selectedEventColor='';
+function setEventColor(color){
+ selectedEventColor=color||'';
+ document.querySelectorAll('#eventColors .color-dot').forEach(x=>x.classList.toggle('selected',(x.dataset.color||'')===selectedEventColor));
+}
+document.querySelectorAll('#eventColors .color-dot').forEach(x=>x.onclick=()=>setEventColor(x.dataset.color||''));
+document.addEventListener('click',()=>document.querySelectorAll('.task-palette.on').forEach(x=>x.classList.remove('on')));
+
 $('#cancel').onclick=()=>$('#modal').classList.remove('on');
 
 $('#save').onclick=async()=>{
@@ -533,8 +617,9 @@ $('#save').onclick=async()=>{
  if(!v){$('#modal').classList.remove('on');return}
  $('#modal').classList.remove('on');
  try{
-   const r=await apiPost({action:'add',type:'event',date:modalKey,position:'',content:v,done:false});
-   (events[modalKey]??=[]).push({id:r.id,text:v});
+   const color=selectedEventColor||'';
+   const r=await apiPost({action:'add',type:'event',date:modalKey,position:'',content:v,color});
+   (events[modalKey]??=[]).push({id:r.id,text:v,color});
    renderCal();
  }catch(e){console.error(e);setSync('저장 실패','error');alert('일정을 저장하지 못했습니다.')}
 };
