@@ -1,0 +1,550 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Work Diary</title>
+<style>
+:root{--bg:#f7f9fc;--paper:#ffffff;--ink:#344052;--muted:#8b96a8;--line:#e7eaf0;--soft:#f8f9fc;--mark:#eaf5ff;--accent:#77aee8;--pink:#f8dce7;--pink-strong:#e995b5;--yellow:#fff1b9;--yellow-strong:#e9c95f;--sky:#dceeff;--sky-strong:#77aee8}
+*{box-sizing:border-box} body{margin:0;background:linear-gradient(135deg,#fff7fa 0%,#fffdf2 46%,#f3f9ff 100%);color:var(--ink);font-family:"Noto Sans KR","Malgun Gothic","Apple SD Gothic Neo",Arial,sans-serif}
+.app{height:100vh;padding:18px 22px;display:flex;flex-direction:column;overflow:hidden}
+.top{height:48px;display:flex;align-items:center;justify-content:space-between;flex:0 0 auto}
+.brand{font-size:19px;font-weight:900;letter-spacing:.04em;color:#55779b}.brand:after{content:"";display:inline-block;width:34px;height:8px;border-radius:8px;margin-left:10px;background:linear-gradient(90deg,var(--pink) 0 33%,var(--yellow) 33% 66%,var(--sky) 66%)}.today{font-size:12px;color:var(--muted)}
+.spread{flex:1;min-height:0;display:grid;grid-template-columns:58% 42%;background:var(--paper);border:1px solid var(--line);border-radius:13px;box-shadow:0 12px 38px rgba(83,105,135,.09);overflow:hidden}
+.left,.right{min-width:0;min-height:0;padding:20px 22px}.left{border-right:1px solid var(--line)}
+.section-head{height:42px;display:flex;align-items:center;justify-content:space-between}
+.title{font-family:inherit;font-size:21px;font-weight:800;letter-spacing:-.02em}.nav{display:flex;align-items:center;gap:8px}
+.nav button,.mini{border:0;background:transparent;color:var(--muted);cursor:pointer;font-size:19px;padding:4px 8px}.nav strong{font-size:13px;min-width:115px;text-align:center}
+.weekdays,.days{display:grid;grid-template-columns:repeat(7,1fr)}
+.weekdays{height:28px;border-bottom:1px solid var(--line);background:linear-gradient(90deg,#fff8fb,#fffdf2,#f5faff);border-radius:8px 8px 0 0}.weekdays div{text-align:center;font-size:10px;letter-spacing:.1em;color:var(--muted)}
+.days{height:calc(100% - 70px);grid-template-rows:repeat(6,1fr)}
+.day{min-height:0;padding:6px 7px;border-right:1px solid var(--line);border-bottom:1px solid var(--line);cursor:pointer;overflow:hidden}
+.day:nth-child(7n){border-right:0}.day.other{background:#fbfaf7;color:#c6c2ba}.day.selected{background:var(--sky)}.day.today .num{background:var(--pink);color:#a14f71;font-weight:900}
+.num{display:inline-flex;width:22px;height:22px;align-items:center;justify-content:center;border-radius:50%;font-size:11px}
+.ev{font-size:10px;margin:2px 0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;padding-left:3px}.ev:before{content:"• ";color:var(--pink-strong)}
+.right{display:flex;flex-direction:column}.week-head{height:42px;display:flex;justify-content:space-between;align-items:center}
+.week-range{font-size:12px;color:var(--muted)}.weeknav button{border:0;background:transparent;font-size:17px;color:var(--muted);cursor:pointer}
+.weekbody{flex:1;min-height:0;display:grid;grid-template-rows:repeat(5,1fr) 1.12fr}
+.wday{min-height:0;border-top:1px solid var(--line);display:grid;grid-template-columns:74px 1fr;padding:6px 0;overflow:hidden}
+.wlabel{font-family:inherit;font-size:12px;font-weight:800;letter-spacing:.03em;padding:5px 8px 0 0;color:#555}.wlabel span{display:block;font-family:inherit;font-size:19px;margin-top:2px}
+.wlabel.active{font-weight:900;color:#5d91c8}.wlabel.active span{background:var(--sky);border-radius:8px;padding:1px 7px;display:inline-block}.tasks{overflow:auto;padding-right:3px}.task{display:flex;align-items:center;gap:7px;font-size:11px;min-height:25px}
+.task input{accent-color:var(--pink-strong)}.task.done .txt{text-decoration:line-through;color:#aaa}.txt{flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.x{border:0;background:none;color:#bbb;cursor:pointer}
+.add{display:flex;gap:5px;margin-top:2px}.add input{flex:1;min-width:0;border:0;border-bottom:1px dashed #cfcac0;background:transparent;padding:5px 2px;font-size:11px;outline:none}.add button{border:0;background:transparent;color:#888;cursor:pointer}
+.notes{border-top:1px solid var(--line);display:grid;grid-template-columns:1fr 1fr;gap:14px;padding-top:8px;min-height:0}.note h3{font-family:inherit;font-size:11px;font-weight:800;letter-spacing:.08em;margin:0 0 5px}.note textarea{width:100%;height:calc(100% - 20px);resize:none;border:0;background:repeating-linear-gradient(transparent,transparent 23px,#edf0f5 24px);outline:none;font:11px/24px "Noto Sans KR","Malgun Gothic","Apple SD Gothic Neo",Arial,sans-serif;padding:0 3px;color:var(--ink)}
+.modal{position:fixed;inset:0;background:#0003;display:none;align-items:center;justify-content:center}.modal.on{display:flex}.box{width:370px;background:var(--paper);padding:20px;border-radius:12px;box-shadow:0 20px 60px #0002}.box h2{font-size:16px;margin:0 0 15px}.box input{width:100%;border:1px solid var(--line);border-radius:7px;padding:10px;outline:none}.actions{display:flex;justify-content:flex-end;gap:7px;margin-top:13px}.actions button{border:1px solid var(--line);background:#fff;padding:7px 12px;border-radius:7px;cursor:pointer}.actions .save{background:var(--sky-strong);color:#fff;border-color:var(--sky-strong)}
+@media(max-width:900px){.app{height:auto;overflow:auto}.spread{grid-template-columns:1fr}.left{border-right:0;border-bottom:1px solid var(--line);height:650px}.right{height:720px}}
+</style>
+
+<style>
+.left .section-head{border-bottom:4px solid var(--pink);padding-bottom:5px}
+.right .week-head{border-bottom:4px solid var(--sky);padding-bottom:5px}
+.day:hover{background:#fff9e5}
+.wday:nth-child(1) .wlabel,.wday:nth-child(4) .wlabel{color:#d57b9f}
+.wday:nth-child(2) .wlabel,.wday:nth-child(5) .wlabel{color:#c49f32}
+.wday:nth-child(3) .wlabel{color:#669fd8}
+.notes .note:first-child{background:#fffaf0;border-radius:10px;padding:8px}
+.notes .note:last-child{background:#fff6fa;border-radius:10px;padding:8px}
+.add input::placeholder,.note textarea::placeholder{color:#b7bec9}
+</style>
+
+<style>
+:root{
+ --bg:#f8e9ee; --paper:#ffffff; --ink:#343944; --muted:#8b9099;
+ --line:#e7e4e6; --soft:#faf8f9; --mark:#fbe8ef; --accent:#dc8fab;
+ --pink:#f5d9e3; --pink-strong:#d9789b; --yellow:#fff4cf;
+ --sky:#eaf5fb; --sky-strong:#83b8d6;
+}
+body{background:#f8e9ee !important}
+.brand{color:#424955 !important}
+.brand:after{display:none !important}
+.spread{box-shadow:0 8px 28px rgba(92,63,75,.08)}
+.left .section-head,.right .week-head{border-bottom:1px solid var(--line) !important;padding-bottom:0 !important}
+.weekdays{background:#faf7f8 !important}
+.day:hover{background:#fff8fa !important}
+.day.selected{background:#fbe8ef !important}
+.day.today .num{background:#f2cad8 !important;color:#9d4968 !important}
+.num{font-size:15px !important;font-weight:700 !important;width:28px !important;height:28px !important}
+.weekdays div{font-size:11px !important;font-weight:700}
+.ev{font-size:10.5px !important}
+.holiday-name{font-size:9px;color:#d75c6f;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin:1px 0 2px 3px}
+.day.holiday .num,.day.sunday .num{color:#d95367}
+.day.saturday .num{color:#5d91bd}
+.wlabel{color:#555 !important}
+.wlabel.active{color:#bd607f !important}
+.wlabel.active span{background:#fbe8ef !important}
+.notes .note:first-child,.notes .note:last-child{background:#fff !important;border-radius:0 !important;padding:0 !important}
+.task input{accent-color:#d9789b !important}
+</style>
+
+<style>
+.day.sunday{background:#fff3f5}
+.day.saturday{background:#f3f8fc}
+.day.holiday{background:#ffedef}
+.day.other.sunday,.day.other.holiday{background:#fcf5f6}
+.day.other.saturday{background:#f7f9fb}
+.day.selected{box-shadow:inset 0 0 0 2px #e6a3b8;background:#fbe8ef !important}
+</style>
+
+<style>
+/* v6 readability */
+.num{
+  font-size:17px !important;
+  font-weight:800 !important;
+  width:31px !important;
+  height:31px !important;
+}
+.ev{
+  font-size:12px !important;
+  line-height:1.45 !important;
+  margin:3px 0 !important;
+}
+.holiday-name{
+  font-size:10.5px !important;
+  font-weight:650;
+  margin:2px 0 3px 3px !important;
+}
+.weekdays div{font-size:12px !important}
+.wday{
+  grid-template-columns:68px 1fr !important;
+  padding:7px 0 !important;
+}
+.wlabel{
+  font-size:13px !important;
+  padding-top:7px !important;
+}
+.wlabel span{
+  font-size:21px !important;
+}
+.tasks{
+  display:grid !important;
+  grid-template-columns:1fr 1fr;
+  gap:0;
+  overflow:hidden !important;
+  padding:0 !important;
+}
+.taskcol{
+  min-width:0;
+  padding:2px 10px 2px 8px;
+  overflow:auto;
+}
+.taskcol + .taskcol{
+  border-left:1px dashed #e1dadd;
+}
+.task{
+  font-size:13px !important;
+  min-height:28px !important;
+  gap:7px !important;
+}
+.task input[type="checkbox"]{
+  width:15px;
+  height:15px;
+  flex:0 0 auto;
+}
+.add{margin-top:3px !important}
+.add input{
+  font-size:12px !important;
+  padding:6px 2px !important;
+}
+.note h3{font-size:12px !important}
+.note textarea{
+  font-size:12.5px !important;
+  line-height:24px !important;
+}
+</style>
+
+<style>
+/* v7 - larger planner writing */
+.ev{
+  font-size:14px !important;
+  line-height:1.5 !important;
+  margin:4px 0 !important;
+  font-weight:550;
+}
+.holiday-name{
+  font-size:11px !important;
+}
+.wday{
+  padding:8px 0 !important;
+}
+.wlabel{
+  font-size:14px !important;
+}
+.wlabel span{
+  font-size:23px !important;
+}
+.tasks{
+  overflow:visible !important;
+  align-items:stretch;
+}
+.taskcol{
+  overflow:hidden !important;
+  padding:1px 11px 1px 9px !important;
+}
+.task{
+  font-size:14.5px !important;
+  min-height:31px !important;
+  line-height:1.3 !important;
+}
+.task input[type="checkbox"]{
+  width:17px !important;
+  height:17px !important;
+}
+.add{
+  height:31px;
+  margin-top:1px !important;
+}
+.add input{
+  font-size:13.5px !important;
+  padding:6px 2px !important;
+}
+.add button{
+  font-size:15px;
+}
+.txt{
+  line-height:1.35;
+}
+/* Each half-day column is designed for about 3 visible task lines plus the add row. */
+.taskcol .task:nth-of-type(n+4){
+  display:none;
+}
+</style>
+
+<style>
+.sync-status{font-size:11px;color:#8b9099;margin-left:auto;margin-right:14px}
+.sync-status.saving{color:#b68b31}
+.sync-status.ok{color:#6c9b78}
+.sync-status.error{color:#c85d6c}
+</style>
+
+</head>
+<body>
+<div class="app">
+ <div class="top"><div class="brand">WORK DIARY</div><div class="sync-status" id="syncStatus">Google Sheets 연결 중…</div><div class="today" id="today"></div></div>
+ <main class="spread">
+  <section class="left">
+   <div class="section-head"><div class="title">Monthly</div><div class="nav"><button id="pm">‹</button><strong id="ml"></strong><button id="nm">›</button></div></div>
+   <div class="weekdays"><div>일</div><div>월</div><div>화</div><div>수</div><div>목</div><div>금</div><div>토</div></div>
+   <div class="days" id="cal"></div>
+  </section>
+  <section class="right">
+   <div class="week-head"><div><span class="title">Weekly</span> <span class="week-range" id="wr"></span></div><div class="weeknav"><button id="pw">‹</button><button id="tw" title="이번 주">·</button><button id="nw">›</button></div></div>
+   <div class="weekbody" id="week"></div>
+  </section>
+ </main>
+</div>
+<div class="modal" id="modal"><div class="box"><h2 id="modalDate">일정 추가</h2><input id="eventText" placeholder="이 날짜의 주요 일정을 입력하세요"><div class="actions"><button id="cancel">취소</button><button class="save" id="save">저장</button></div></div></div>
+<script>
+
+const $=s=>document.querySelector(s);
+const API_URL='https://script.google.com/macros/s/AKfycbx-n8fe-svV3d7TVZAkEp6XNHImb09E60zBnNxekaGuG27HVWnKwM5O6IlfxGGaPdwv/exec';
+
+let events={}, tasks={}, notes={};
+let serverRows=[];
+let syncTimer=null;
+
+function setSync(text,state=''){
+  const el=$('#syncStatus');
+  if(!el)return;
+  el.textContent=text;
+  el.className='sync-status '+state;
+}
+
+async function apiGet(){
+  setSync('Google Sheets 불러오는 중…','saving');
+  const res=await fetch(API_URL,{method:'GET',redirect:'follow'});
+  if(!res.ok) throw new Error('GET '+res.status);
+  return await res.json();
+}
+
+async function apiPost(payload){
+  setSync('저장 중…','saving');
+  const res=await fetch(API_URL,{
+    method:'POST',
+    redirect:'follow',
+    headers:{'Content-Type':'text/plain;charset=utf-8'},
+    body:JSON.stringify(payload)
+  });
+  if(!res.ok) throw new Error('POST '+res.status);
+  const data=await res.json();
+  if(data && data.success===false) throw new Error(data.message||'저장 실패');
+  setSync('저장됨','ok');
+  return data;
+}
+
+function rebuildState(rows){
+  serverRows=Array.isArray(rows)?rows:[];
+  events={}; tasks={}; notes={};
+
+  serverRows.forEach(r=>{
+    if(r.type==='event'){
+      (events[r.date]??=[]).push({id:r.id,text:String(r.content??'')});
+    }else if(r.type==='task'){
+      (tasks[r.date]??=[]).push({
+        id:r.id,
+        text:String(r.content??''),
+        done:r.done===true || String(r.done).toLowerCase()==='true',
+        col:Number(r.position)||0
+      });
+    }else if(r.type==='note'){
+      notes[`${r.date}:${r.position}`]={id:r.id,text:String(r.content??'')};
+    }
+  });
+}
+
+async function loadFromServer(){
+  try{
+    const rows=await apiGet();
+    rebuildState(rows);
+    setSync('Google Sheets 연결됨','ok');
+    renderCal(); renderWeek();
+  }catch(err){
+    console.error(err);
+    setSync('연결 실패','error');
+    alert('Google Sheets 데이터를 불러오지 못했습니다. 인터넷 연결 또는 Apps Script 배포 설정을 확인해주세요.');
+  }
+}
+let holidays={};
+
+// 대한민국 공휴일 자동 계산.
+// 양력 고정 공휴일 + 음력 공휴일(설날/부처님오신날/추석) + 대체공휴일을 계산한다.
+// 선거일·임시공휴일처럼 정부가 별도 지정하는 날짜는 아래 specialHolidays에 추가할 수 있다.
+const specialHolidays={
+  '2026-06-03':'전국동시지방선거'
+};
+
+function addHoliday(date,name){
+  const k=key(date);
+  holidays[k]=holidays[k] ? holidays[k]+' · '+name : name;
+}
+function solarDate(y,m,d){ return new Date(y,m-1,d,12); }
+
+// 1900~2100 음력 변환용 데이터
+const lunarInfo=[
+0x04bd8,0x04ae0,0x0a570,0x054d5,0x0d260,0x0d950,0x16554,0x056a0,0x09ad0,0x055d2,
+0x04ae0,0x0a5b6,0x0a4d0,0x0d250,0x1d255,0x0b540,0x0d6a0,0x0ada2,0x095b0,0x14977,
+0x04970,0x0a4b0,0x0b4b5,0x06a50,0x06d40,0x1ab54,0x02b60,0x09570,0x052f2,0x04970,
+0x06566,0x0d4a0,0x0ea50,0x06e95,0x05ad0,0x02b60,0x186e3,0x092e0,0x1c8d7,0x0c950,
+0x0d4a0,0x1d8a6,0x0b550,0x056a0,0x1a5b4,0x025d0,0x092d0,0x0d2b2,0x0a950,0x0b557,
+0x06ca0,0x0b550,0x15355,0x04da0,0x0a5d0,0x14573,0x052d0,0x0a9a8,0x0e950,0x06aa0,
+0x0aea6,0x0ab50,0x04b60,0x0aae4,0x0a570,0x05260,0x0f263,0x0d950,0x05b57,0x056a0,
+0x096d0,0x04dd5,0x04ad0,0x0a4d0,0x0d4d4,0x0d250,0x0d558,0x0b540,0x0b5a0,0x195a6,
+0x095b0,0x049b0,0x0a974,0x0a4b0,0x0b27a,0x06a50,0x06d40,0x0af46,0x0ab60,0x09570,
+0x04af5,0x04970,0x064b0,0x074a3,0x0ea50,0x06b58,0x05ac0,0x0ab60,0x096d5,0x092e0,
+0x0c960,0x0d954,0x0d4a0,0x0da50,0x07552,0x056a0,0x0abb7,0x025d0,0x092d0,0x0cab5,
+0x0a950,0x0b4a0,0x0baa4,0x0ad50,0x055d9,0x04ba0,0x0a5b0,0x15176,0x052b0,0x0a930,
+0x07954,0x06aa0,0x0ad50,0x05b52,0x04b60,0x0a6e6,0x0a4e0,0x0d260,0x0ea65,0x0d530,
+0x05aa0,0x076a3,0x096d0,0x04afb,0x04ad0,0x0a4d0,0x1d0b6,0x0d250,0x0d520,0x0dd45,
+0x0b5a0,0x056d0,0x055b2,0x049b0,0x0a577,0x0a4b0,0x0aa50,0x1b255,0x06d20,0x0ada0,
+0x14b63,0x09370,0x049f8,0x04970,0x064b0,0x168a6,0x0ea50,0x06b20,0x1a6c4,0x0aae0,
+0x0a2e0,0x0d2e3,0x0c960,0x0d557,0x0d4a0,0x0da50,0x05d55,0x056a0,0x0a6d0,0x055d4,
+0x052d0,0x0a9b8,0x0a950,0x0b4a0,0x0b6a6,0x0ad50,0x055a0,0x0aba4,0x0a5b0,0x052b0,
+0x0b273,0x06930,0x07337,0x06aa0,0x0ad50,0x14b55,0x04b60,0x0a570,0x054e4,0x0d160,
+0x0e968,0x0d520,0x0daa0,0x16aa6,0x056d0,0x04ae0,0x0a9d4,0x0a2d0,0x0d150,0x0f252
+];
+function leapMonth(y){return lunarInfo[y-1900]&0xf}
+function leapDays(y){if(leapMonth(y))return (lunarInfo[y-1900]&0x10000)?30:29;return 0}
+function monthDays(y,m){return (lunarInfo[y-1900]&(0x10000>>m))?30:29}
+function yearDays(y){let sum=348;for(let i=0x8000;i>0x8;i>>=1)sum+=(lunarInfo[y-1900]&i)?1:0;return sum+leapDays(y)}
+function lunarToSolar(y,m,d){
+ let offset=0;
+ for(let yy=1900;yy<y;yy++)offset+=yearDays(yy);
+ let leap=leapMonth(y);
+ for(let mm=1;mm<m;mm++){offset+=monthDays(y,mm);if(mm===leap)offset+=leapDays(y)}
+ offset+=d-1;
+ const base=new Date(1900,0,31,12);
+ base.setDate(base.getDate()+offset);
+ return base;
+}
+function observedAfter(d,name){
+ let x=new Date(d);
+ do{x.setDate(x.getDate()+1)}while(x.getDay()===0 || holidays[key(x)]);
+ addHoliday(x,name);
+}
+function buildHolidays(y){
+ holidays={};
+ // 고정 공휴일
+ addHoliday(solarDate(y,1,1),'신정');
+ addHoliday(solarDate(y,3,1),'삼일절');
+ addHoliday(solarDate(y,5,5),'어린이날');
+ addHoliday(solarDate(y,6,6),'현충일');
+ addHoliday(solarDate(y,8,15),'광복절');
+ addHoliday(solarDate(y,10,3),'개천절');
+ addHoliday(solarDate(y,10,9),'한글날');
+ addHoliday(solarDate(y,12,25),'성탄절');
+
+ // 음력 공휴일
+ if(y>=1900 && y<=2099){
+   let seol=lunarToSolar(y,1,1);
+   let seolPrev=new Date(seol);seolPrev.setDate(seolPrev.getDate()-1);
+   let seolNext=new Date(seol);seolNext.setDate(seolNext.getDate()+1);
+   addHoliday(seolPrev,'설날 연휴'); addHoliday(seol,'설날'); addHoliday(seolNext,'설날 연휴');
+   let bud=lunarToSolar(y,4,8);addHoliday(bud,'부처님오신날');
+   let chu=lunarToSolar(y,8,15), cp=new Date(chu), cn=new Date(chu);
+   cp.setDate(cp.getDate()-1);cn.setDate(cn.getDate()+1);
+   addHoliday(cp,'추석 연휴');addHoliday(chu,'추석');addHoliday(cn,'추석 연휴');
+
+   // 대체공휴일: 설/추석, 어린이날, 삼일절, 광복절, 개천절, 한글날, 부처님오신날, 성탄절
+   const groups=[
+     {dates:[seolPrev,seol,seolNext],name:'설날 대체공휴일',weekend:true},
+     {dates:[cp,chu,cn],name:'추석 대체공휴일',weekend:true}
+   ];
+   groups.forEach(g=>{
+     if(g.dates.some(x=>x.getDay()===0)) observedAfter(g.dates[g.dates.length-1],g.name);
+   });
+   [[solarDate(y,3,1),'삼일절 대체공휴일'],[solarDate(y,5,5),'어린이날 대체공휴일'],
+    [bud,'부처님오신날 대체공휴일'],[solarDate(y,8,15),'광복절 대체공휴일'],
+    [solarDate(y,10,3),'개천절 대체공휴일'],[solarDate(y,10,9),'한글날 대체공휴일'],
+    [solarDate(y,12,25),'성탄절 대체공휴일']].forEach(([d,n])=>{
+      if(d.getDay()===0 || d.getDay()===6) observedAfter(d,n);
+   });
+ }
+ Object.entries(specialHolidays).forEach(([k,n])=>{if(k.startsWith(String(y)))holidays[k]=n});
+}
+
+
+let now=new Date(), month=new Date(now.getFullYear(),now.getMonth(),1), selected=new Date(now), weekStart=monday(now), modalKey='';
+function key(d){return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`}
+function monday(d){let x=new Date(d);x.setHours(12,0,0,0);let n=x.getDay();x.setDate(x.getDate()-(n===0?6:n-1));return x}
+function esc(s){return String(s).replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]))}
+
+function renderCal(){
+ let y=month.getFullYear(),m=month.getMonth(); buildHolidays(y); $('#ml').textContent=`${y}. ${String(m+1).padStart(2,'0')}`;
+ let first=new Date(y,m,1).getDay(), last=new Date(y,m+1,0).getDate(), arr=[];
+ for(let i=first-1;i>=0;i--)arr.push(new Date(y,m,-i)); for(let d=1;d<=last;d++)arr.push(new Date(y,m,d)); let n=1;while(arr.length<42)arr.push(new Date(y,m+1,n++));
+ $('#cal').innerHTML=arr.map(d=>{
+   let k=key(d),other=d.getMonth()!=m,sel=k==key(selected),tod=k==key(now);let hol=holidays[k]||'', dow=d.getDay();
+   return `<div class="day ${other?'other':''} ${sel?'selected':''} ${tod?'today':''} ${hol?'holiday':''} ${dow===0?'sunday':''} ${dow===6?'saturday':''}" data-k="${k}">
+     <span class="num">${d.getDate()}</span>
+     ${hol?`<div class="holiday-name">${hol}</div>`:''}
+     ${(events[k]||[]).slice(0,hol?2:3).map(e=>`<div class="ev">${esc(e.text)}</div>`).join('')}
+   </div>`
+ }).join('');
+ document.querySelectorAll('.day').forEach(el=>el.onclick=()=>{
+   let [y,m,d]=el.dataset.k.split('-').map(Number);
+   selected=new Date(y,m-1,d);weekStart=monday(selected);renderCal();renderWeek();
+   modalKey=el.dataset.k;$('#modalDate').textContent=`${m}월 ${d}일 일정`;$('#eventText').value='';
+   $('#modal').classList.add('on');$('#eventText').focus()
+ })
+}
+
+function renderWeek(){
+ let end=new Date(weekStart);end.setDate(end.getDate()+6);
+ $('#wr').textContent=`${weekStart.getMonth()+1}.${weekStart.getDate()} — ${end.getMonth()+1}.${end.getDate()}`;
+ let names=['월','화','수','목','금'], html='';
+ for(let i=0;i<5;i++){
+   let d=new Date(weekStart);d.setDate(d.getDate()+i);
+   let k=key(d), list=tasks[k]||[];
+   let left=list.filter(t=>(t.col??0)===0);
+   let right=list.filter(t=>t.col===1);
+   const colHtml=(items,col)=>`
+     <div class="taskcol">
+       ${items.map(t=>`<div class="task ${t.done?'done':''}">
+         <input type="checkbox" data-id="${t.id}" ${t.done?'checked':''}>
+         <div class="txt">${esc(t.text)}</div>
+         <button class="x" data-del="${t.id}">×</button>
+       </div>`).join('')}
+       <div class="add">
+         <input data-add="${k}" data-col="${col}" placeholder="${items.length>=3?'최대 3개':'+ 할 일'}" ${items.length>=3?'disabled':''}>
+         <button data-plus="${k}" data-col="${col}" ${items.length>=3?'disabled':''}>↵</button>
+       </div>
+     </div>`;
+   html+=`<div class="wday">
+     <div class="wlabel ${k==key(selected)?'active':''}">${names[i]}<span>${d.getDate()}</span></div>
+     <div class="tasks">${colHtml(left,0)}${colHtml(right,1)}</div>
+   </div>`;
+ }
+ let wk=key(weekStart);
+ html+=`<div class="notes">
+   <div class="note"><h3>THIS WEEK</h3><textarea data-note="${wk}:week" placeholder="이번 주에 꼭 기억할 것"></textarea></div>
+   <div class="note"><h3>MEMO</h3><textarea data-note="${wk}:memo" placeholder="자유롭게 메모"></textarea></div>
+ </div>`;
+ $('#week').innerHTML=html;
+
+ document.querySelectorAll('[data-note]').forEach(x=>{
+   const [date,position]=x.dataset.note.split(':');
+   x.value=notes[x.dataset.note]?.text||'';
+   x.oninput=()=>{
+     clearTimeout(x._timer);
+     x._timer=setTimeout(()=>saveNote(date,position,x.value),700);
+   };
+ });
+
+ document.querySelectorAll('.task input[type="checkbox"]').forEach(x=>x.onchange=()=>updateTask(x.dataset.id,x.checked));
+ document.querySelectorAll('[data-del]').forEach(x=>x.onclick=()=>deleteTask(x.dataset.del));
+ document.querySelectorAll('[data-add]').forEach(x=>x.onkeydown=e=>{if(e.key==='Enter')addTask(x.dataset.add,x,+x.dataset.col)});
+ document.querySelectorAll('[data-plus]').forEach(b=>b.onclick=()=>{
+   const input=document.querySelector(`[data-add="${b.dataset.plus}"][data-col="${b.dataset.col}"]`);
+   addTask(b.dataset.plus,input,+b.dataset.col)
+ });
+}
+
+async function addTask(k,input,col=0){
+ let v=input.value.trim(); if(!v)return;
+ const count=(tasks[k]||[]).filter(t=>(t.col??0)===col).length;
+ if(count>=3){alert('한 칸에는 할 일을 최대 3개까지 입력할 수 있어요.');return}
+ input.value='';
+ try{
+   const r=await apiPost({action:'add',type:'task',date:k,position:String(col),content:v,done:false});
+   (tasks[k]??=[]).push({id:r.id,text:v,done:false,col});
+   renderWeek();
+ }catch(e){console.error(e);setSync('저장 실패','error');alert('할 일을 저장하지 못했습니다.')}
+}
+
+async function updateTask(id,done){
+ const found=Object.values(tasks).flat().find(t=>t.id===id); if(!found)return;
+ found.done=done; renderWeek();
+ try{await apiPost({action:'update',id,done})}
+ catch(e){found.done=!done;renderWeek();setSync('저장 실패','error');alert('완료 상태를 저장하지 못했습니다.')}
+}
+
+async function deleteTask(id){
+ let holder=null, idx=-1;
+ for(const [k,list] of Object.entries(tasks)){
+   const i=list.findIndex(t=>t.id===id);
+   if(i>=0){holder=k;idx=i;break}
+ }
+ if(holder===null)return;
+ const removed=tasks[holder].splice(idx,1)[0]; renderWeek();
+ try{await apiPost({action:'delete',id})}
+ catch(e){tasks[holder].splice(idx,0,removed);renderWeek();setSync('삭제 실패','error');alert('할 일을 삭제하지 못했습니다.')}
+}
+
+async function saveNote(date,position,content){
+ const nk=`${date}:${position}`, existing=notes[nk];
+ try{
+   if(existing){
+     await apiPost({action:'update',id:existing.id,content});
+     existing.text=content;
+   }else if(content.trim()){
+     const r=await apiPost({action:'add',type:'note',date,position,content,done:false});
+     notes[nk]={id:r.id,text:content};
+   }
+ }catch(e){console.error(e);setSync('저장 실패','error')}
+}
+
+$('#pm').onclick=()=>{month.setMonth(month.getMonth()-1);renderCal()};
+$('#nm').onclick=()=>{month.setMonth(month.getMonth()+1);renderCal()};
+$('#pw').onclick=()=>{weekStart.setDate(weekStart.getDate()-7);selected=new Date(weekStart);month=new Date(selected.getFullYear(),selected.getMonth(),1);renderCal();renderWeek()};
+$('#nw').onclick=()=>{weekStart.setDate(weekStart.getDate()+7);selected=new Date(weekStart);month=new Date(selected.getFullYear(),selected.getMonth(),1);renderCal();renderWeek()};
+$('#tw').onclick=()=>{selected=new Date(now);weekStart=monday(now);month=new Date(now.getFullYear(),now.getMonth(),1);renderCal();renderWeek()};
+$('#cancel').onclick=()=>$('#modal').classList.remove('on');
+
+$('#save').onclick=async()=>{
+ let v=$('#eventText').value.trim();
+ if(!v){$('#modal').classList.remove('on');return}
+ $('#modal').classList.remove('on');
+ try{
+   const r=await apiPost({action:'add',type:'event',date:modalKey,position:'',content:v,done:false});
+   (events[modalKey]??=[]).push({id:r.id,text:v});
+   renderCal();
+ }catch(e){console.error(e);setSync('저장 실패','error');alert('일정을 저장하지 못했습니다.')}
+};
+
+$('#eventText').onkeydown=e=>{if(e.key==='Enter')$('#save').click()};
+$('#modal').onclick=e=>{if(e.target.id==='modal')$('#modal').classList.remove('on')};
+$('#today').textContent=new Intl.DateTimeFormat('ko-KR',{year:'numeric',month:'long',day:'numeric',weekday:'long'}).format(now);
+
+renderCal();renderWeek();
+loadFromServer();
+
+</script>
+</body></html>
