@@ -1761,7 +1761,13 @@ function rebuildState(rows){
 
 async function loadFromServer(){
   try{
-    const rows=await apiGet();
+    const response=await apiGet();
+    // Apps Script GET 응답은 배포 버전에 따라 배열 자체 또는 {data:[...]} 형태일 수 있음.
+    // 두 형식을 모두 지원해 기존 Google Sheets 자료를 그대로 불러온다.
+    const rows=Array.isArray(response)
+      ? response
+      : (Array.isArray(response?.data) ? response.data
+      : (Array.isArray(response?.rows) ? response.rows : []));
     rebuildState(rows);
     setSync('Google Sheets 연결됨','ok');
     renderCal(); renderWeek();
