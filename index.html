@@ -202,10 +202,7 @@ body{background:#f8e9ee !important}
 .txt{
   line-height:1.35;
 }
-/* Each half-day column is designed for about 3 visible task lines plus the add row. */
-.taskcol .task:nth-of-type(n+4){
-  display:none;
-}
+/* TODO 항목은 addTask의 평일 7개 / 주말 2개 제한에 따라 표시 */
 </style>
 
 <style>
@@ -1937,8 +1934,8 @@ function renderWeek(){
              <button type="button" class="color-dot" data-pick="purple" data-color="purple" title="보라"></button>
            </div>
          </div>
-         <input data-add="${k}" data-col="${col}" data-color="" placeholder="${items.length>=3?'최대 3개':'+ 할 일'}" ${items.length>=3?'disabled':''}>
-         <button data-plus="${k}" data-col="${col}" ${items.length>=3?'disabled':''}>↵</button>
+         <input data-add="${k}" data-col="${col}" data-color="" placeholder="+ 할 일">
+         <button data-plus="${k}" data-col="${col}">↵</button>
        </div>
      </div>`;
    const dayEvents=events[k]||[];
