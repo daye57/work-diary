@@ -671,17 +671,18 @@ $('#editSave').onclick=async()=>{
  const v=$('#editText').value.trim();
  if(!v)return;
  try{
-   setStatus('저장 중…');
+   setSync('저장 중…','saving');
    await apiPost({action:'update',id:editState.id,content:v,color:editState.color});
    const bucket=editState.type==='event'?events:tasks;
    const item=(bucket[editState.key]||[]).find(x=>String(x.id)===String(editState.id));
    if(item){item.text=v;item.color=editState.color}
    $('#editModal').classList.remove('on');
-   renderAll();
-   setStatus('연결됨');
+   renderCal();
+   renderWeek();
+   setSync('저장됨','ok');
  }catch(err){
    console.error(err);
-   setStatus('저장 오류');
+   setSync('저장 오류','error');
    alert('수정 내용을 저장하지 못했습니다.');
  }
 };
@@ -689,16 +690,17 @@ $('#editSave').onclick=async()=>{
 $('#editDelete').onclick=async()=>{
  if(!confirm('이 내용을 삭제할까요?'))return;
  try{
-   setStatus('삭제 중…');
+   setSync('삭제 중…','saving');
    await apiPost({action:'delete',id:editState.id});
    const bucket=editState.type==='event'?events:tasks;
    bucket[editState.key]=(bucket[editState.key]||[]).filter(x=>String(x.id)!==String(editState.id));
    $('#editModal').classList.remove('on');
-   renderAll();
-   setStatus('연결됨');
+   renderCal();
+   renderWeek();
+   setSync('저장됨','ok');
  }catch(err){
    console.error(err);
-   setStatus('삭제 오류');
+   setSync('삭제 오류','error');
    alert('삭제하지 못했습니다.');
  }
 };
