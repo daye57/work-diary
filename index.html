@@ -1556,6 +1556,24 @@ html,body{
 }
 </style>
 
+
+<style>
+/* v12.11 - Weekly 연동 일정: 배경 대신 색상 테두리 */
+#week .week-event{
+  background:#fff !important;
+  box-shadow:none !important;
+}
+#week .week-event.mark-pink{background:#fff !important;border:1.5px solid #efb8c2 !important;}
+#week .week-event.mark-yellow{background:#fff !important;border:1.5px solid #e6cf7e !important;}
+#week .week-event.mark-blue{background:#fff !important;border:1.5px solid #9fc5e8 !important;}
+#week .week-event.mark-green{background:#fff !important;border:1.5px solid #a8d5b5 !important;}
+#week .week-event.mark-purple{background:#fff !important;border:1.5px solid #c7b3df !important;}
+#week .week-event:not(.mark-pink):not(.mark-yellow):not(.mark-blue):not(.mark-green):not(.mark-purple){
+  background:#fff !important;
+  border:1px solid #ddd !important;
+}
+</style>
+
 </head>
 <body>
 <div class="app tab-app">
