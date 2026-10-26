@@ -253,6 +253,24 @@ body{background:#f8e9ee !important}
 .danger{background:#fff;border:1px solid #e2aebd;color:#b9506c}
 </style>
 
+
+<style>
+/* v10.4 - Monthly 일정 여러 줄 표시 (실제 #cal 컨테이너 적용) */
+#cal .ev{
+  display:block !important;
+  width:100% !important;
+  max-width:100% !important;
+  white-space:normal !important;
+  overflow:visible !important;
+  text-overflow:clip !important;
+  overflow-wrap:break-word !important;
+  word-break:keep-all !important;
+  line-height:1.35 !important;
+  box-sizing:border-box !important;
+  height:auto !important;
+}
+</style>
+
 </head>
 <body>
 <div class="app">
