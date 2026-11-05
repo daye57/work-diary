@@ -1856,8 +1856,11 @@ function buildHolidays(y){
  // 고정 공휴일
  addHoliday(solarDate(y,1,1),'신정');
  addHoliday(solarDate(y,3,1),'삼일절');
+ // 2026년 이후 추가 표시 공휴일 (기존 일정·저장 데이터와 무관)
+ if(y>=2026) addHoliday(solarDate(y,5,1),'노동절');
  addHoliday(solarDate(y,5,5),'어린이날');
  addHoliday(solarDate(y,6,6),'현충일');
+ if(y>=2026) addHoliday(solarDate(y,7,17),'제헌절');
  addHoliday(solarDate(y,8,15),'광복절');
  addHoliday(solarDate(y,10,3),'개천절');
  addHoliday(solarDate(y,10,9),'한글날');
@@ -1886,6 +1889,13 @@ function buildHolidays(y){
     [bud,'부처님오신날 대체공휴일'],[solarDate(y,8,15),'광복절 대체공휴일'],
     [solarDate(y,10,3),'개천절 대체공휴일'],[solarDate(y,10,9),'한글날 대체공휴일'],
     [solarDate(y,12,25),'성탄절 대체공휴일']].forEach(([d,n])=>{
+      if(d.getDay()===0 || d.getDay()===6) observedAfter(d,n);
+   });
+ }
+ // 2026년부터 노동절·제헌절도 토/일요일과 겹치면 대체공휴일 지정
+ if(y>=2026){
+   [[solarDate(y,5,1),'노동절 대체공휴일'],
+    [solarDate(y,7,17),'제헌절 대체공휴일']].forEach(([d,n])=>{
       if(d.getDay()===0 || d.getDay()===6) observedAfter(d,n);
    });
  }
