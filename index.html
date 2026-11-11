@@ -1581,12 +1581,12 @@ html,body{
 </style>
 
 <style>
-/* v12.18: 메모 제목과 안정적인 내부 스크롤 */
+/* v12.20: 메모 제목 강조 및 연한 색상, 기존 스크롤 유지 */
 .sticky-page{min-height:0!important;overflow:hidden!important}
 .sticky-page .sticky-grid{min-height:0!important;overflow-y:auto!important;overflow-x:hidden!important;overscroll-behavior:contain;grid-auto-rows:370px;align-content:start;scrollbar-gutter:stable;padding-bottom:24px}
 .sticky-page .sticky-card{height:370px!important;min-height:0!important;max-height:370px!important;transform:none!important;overflow:hidden!important;box-sizing:border-box}
-.sticky-page .sticky-title{display:block;flex:0 0 auto;width:100%;min-width:0;box-sizing:border-box;border:0;border-bottom:1px solid rgba(80,70,40,.17);background:transparent;color:#303030;font:700 16px/1.5 inherit;padding:8px 3px;outline:none;border-radius:0}
-.sticky-page .sticky-title::placeholder{color:#8d8878;font-weight:500}
+.sticky-page .sticky-title{display:block;flex:0 0 auto;width:100%;min-width:0;box-sizing:border-box;border:0;border-bottom:1px solid rgba(80,70,40,.17);background:transparent;color:#303030;font-family:inherit;font-size:17px;font-weight:800;line-height:1.5;padding:8px 3px;outline:none;border-radius:0}
+.sticky-page .sticky-title::placeholder{color:#969da6;font-weight:500}
 .sticky-page .sticky-body{display:block;flex:1 1 auto;min-height:0!important;height:0!important;max-height:none!important;overflow-y:auto!important;overflow-x:hidden!important;overscroll-behavior:contain;scrollbar-width:thin;touch-action:pan-y;box-sizing:border-box;resize:none!important}
 .sticky-page .sticky-tools,.sticky-page .sticky-footer{flex:0 0 auto}
 @media(max-width:650px){.sticky-page .sticky-grid{grid-auto-rows:420px}.sticky-page .sticky-card{height:420px!important;max-height:420px!important}}
@@ -2214,7 +2214,9 @@ $('#fontFamilySelect').onchange=e=>{prefs={...prefs,fontFamily:e.target.value};s
 $('#resetTheme').onclick=()=>{prefs={...DEFAULT_PREFS};savePrefs(prefs)};
 
 /* ---------- 스티커 메모장 (Google Sheets 동기화) ---------- */
-const stickyColors=['#fff0a8','#fbdbe5','#dceefc','#dff3d8','#eee3fb'];
+const stickyColors=['#ffffff','#fffbea','#fff2f5','#f0f8ff','#f1faef','#f7f2ff'];
+const legacyStickyColors={'#fff0a8':'#fffbea','#fbdbe5':'#fff2f5','#dceefc':'#f0f8ff','#dff3d8':'#f1faef','#eee3fb':'#f7f2ff'};
+const stickyColorNames={'#ffffff':'흰색 (기본)','#fffbea':'연노랑','#fff2f5':'연분홍','#f0f8ff':'연하늘','#f1faef':'연민트','#f7f2ff':'연보라'};
 function encodeStickyTitle(title,pinOrder){
   return (pinOrder==null?'':`[[PIN:${String(pinOrder).padStart(6,'0')}]]`)+(title||'스티커');
 }
@@ -2228,9 +2230,10 @@ function renderStickies(){
     return 0;
   });
   grid.innerHTML=ordered.map(s=>{
-    const color=stickyColors.includes(s.color)?s.color:stickyColors[0];
+    const normalizedColor=legacyStickyColors[s.color]||s.color;
+    const color=stickyColors.includes(normalizedColor)?normalizedColor:stickyColors[0];
     return `<article class="sticky-card" data-sticky="${esc(String(s.id))}" style="background:${color}">
-      <div class="sticky-tools"><button type="button" class="sticky-pin ${s.pinOrder!=null?'is-pinned':''}" title="${s.pinOrder!=null?'고정 해제':'맨 앞에 고정'}" aria-pressed="${s.pinOrder!=null}">${s.pinOrder!=null?'고정됨':'고정'}</button><select aria-label="스티커 색상" class="sticky-color">${stickyColors.map(c=>`<option value="${c}" ${c===color?'selected':''}>${({'#fff0a8':'노랑','#fbdbe5':'분홍','#dceefc':'하늘','#dff3d8':'연두','#eee3fb':'보라'})[c]}</option>`).join('')}</select><button type="button" class="sticky-delete" title="삭제">×</button></div>
+      <div class="sticky-tools"><button type="button" class="sticky-pin ${s.pinOrder!=null?'is-pinned':''}" title="${s.pinOrder!=null?'고정 해제':'맨 앞에 고정'}" aria-pressed="${s.pinOrder!=null}">${s.pinOrder!=null?'고정됨':'고정'}</button><select aria-label="스티커 색상" class="sticky-color">${stickyColors.map(c=>`<option value="${c}" ${c===color?'selected':''}>${stickyColorNames[c]}</option>`).join('')}</select><button type="button" class="sticky-delete" title="삭제">×</button></div>
       <input class="sticky-title" type="text" maxlength="200" placeholder="제목 (선택)" value="${esc(s.title||'')}">
       <textarea class="sticky-body" placeholder="메모를 입력하세요">${esc(s.body)}</textarea>
       <div class="sticky-footer"><span class="sticky-feedback"></span><button type="button" class="sticky-save">저장</button></div>
