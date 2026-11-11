@@ -70,7 +70,7 @@
  --pink:#f5d9e3; --pink-strong:#d9789b; --yellow:#fff4cf;
  --sky:#eaf5fb; --sky-strong:#83b8d6;
 }
-body{background:#f8e9ee !important}
+body{background:var(--outer-background,#f8e9ee) !important}
 .brand{color:#424955 !important}
 .brand:after{display:none !important}
 .spread{box-shadow:0 8px 28px rgba(92,63,75,.08)}
@@ -1591,6 +1591,13 @@ html,body{
 .sticky-page .sticky-tools,.sticky-page .sticky-footer{flex:0 0 auto}
 @media(max-width:650px){.sticky-page .sticky-grid{grid-auto-rows:420px}.sticky-page .sticky-card{height:420px!important;max-height:420px!important}}
 </style>
+<style>
+/* v12.21: 테마와 독립적인 바깥 배경 선택 */
+.background-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(76px,1fr));gap:7px;margin-top:8px}
+.background-grid button{display:flex;align-items:center;justify-content:center;gap:5px;flex-direction:column;padding:8px 3px;border:1px solid var(--line);border-radius:9px;background:var(--paper);font:inherit;font-size:11px;color:var(--ink);cursor:pointer}
+.background-grid button::before{content:"";display:block;width:29px;height:23px;background:var(--swatch);border:1px solid #0002;border-radius:5px}
+.background-grid button.active{outline:2px solid var(--accent);font-weight:800}
+</style>
 </head>
 <body>
 <div class="app tab-app">
@@ -1709,6 +1716,18 @@ html,body{
         <button type="button" data-theme="sky">스카이</button>
         <button type="button" data-theme="lavender">라벤더</button>
         <button type="button" data-theme="mono">모노</button>
+      </div>
+    </div>
+    <div class="setting-group">
+      <label>바깥 배경색 <span style="font-size:11px;color:var(--muted);font-weight:400">(테마와 별도로 설정)</span></label>
+      <div class="background-grid" id="backgroundGrid" role="group" aria-label="바깥 배경색">
+        <button type="button" data-outer-bg="pink" style="--swatch:#f8e9ee">핑크</button>
+        <button type="button" data-outer-bg="white" style="--swatch:#ffffff">화이트</button>
+        <button type="button" data-outer-bg="cream" style="--swatch:#faf5e8">크림</button>
+        <button type="button" data-outer-bg="mint" style="--swatch:#eaf6f0">민트</button>
+        <button type="button" data-outer-bg="sky" style="--swatch:#ebf4fc">하늘</button>
+        <button type="button" data-outer-bg="lavender" style="--swatch:#f1ecfa">라벤더</button>
+        <button type="button" data-outer-bg="gray" style="--swatch:#f1f2f4">그레이</button>
       </div>
     </div>
     <div class="setting-group">
@@ -2185,12 +2204,15 @@ function showView(view){
 document.querySelectorAll('.tab-btn[data-view]').forEach(b=>b.onclick=()=>showView(b.dataset.view));
 
 /* ---------- 디자인 설정 ---------- */
-const DEFAULT_PREFS={theme:'pink',fontSize:'normal',fontFamily:'gothic'};
+const DEFAULT_PREFS={theme:'pink',outerBg:'pink',fontSize:'normal',fontFamily:'gothic'};
+const OUTER_BACKGROUNDS={pink:'#f8e9ee',white:'#ffffff',cream:'#faf5e8',mint:'#eaf6f0',sky:'#ebf4fc',lavender:'#f1ecfa',gray:'#f1f2f4'};
 function loadPrefs(){
   try{return {...DEFAULT_PREFS,...JSON.parse(localStorage.getItem('workDiaryPrefs')||'{}')}}catch(e){return {...DEFAULT_PREFS}}
 }
 function applyPrefs(p){
   document.body.dataset.theme=p.theme;
+  document.body.style.setProperty('--outer-background',OUTER_BACKGROUNDS[p.outerBg]||OUTER_BACKGROUNDS.pink);
+  document.querySelectorAll('[data-outer-bg]').forEach(b=>{const selected=b.dataset.outerBg===(p.outerBg||'pink');b.classList.toggle('active',selected);b.setAttribute('aria-pressed',String(selected));});
   document.body.dataset.fontSize=p.fontSize;
   document.body.dataset.fontFamily=p.fontFamily;
   $('#fontSizeSelect').value=p.fontSize;
@@ -2209,6 +2231,7 @@ $('#closeSettings').onclick=()=>$('#settingsModal').classList.remove('on');
 document.querySelectorAll('[data-theme]').forEach(b=>b.onclick=()=>{
   prefs={...prefs,theme:b.dataset.theme}; savePrefs(prefs);
 });
+document.querySelectorAll('[data-outer-bg]').forEach(b=>b.onclick=()=>{prefs={...prefs,outerBg:b.dataset.outerBg};savePrefs(prefs)});
 $('#fontSizeSelect').onchange=e=>{prefs={...prefs,fontSize:e.target.value};savePrefs(prefs)};
 $('#fontFamilySelect').onchange=e=>{prefs={...prefs,fontFamily:e.target.value};savePrefs(prefs)};
 $('#resetTheme').onclick=()=>{prefs={...DEFAULT_PREFS};savePrefs(prefs)};
