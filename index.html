@@ -33,19 +33,19 @@
 .modal{position:fixed;inset:0;background:#0003;display:none;align-items:center;justify-content:center}.modal.on{display:flex}.box{width:370px;background:var(--paper);padding:20px;border-radius:12px;box-shadow:0 20px 60px #0002}.box h2{font-size:16px;margin:0 0 15px}.box input{width:100%;border:1px solid var(--line);border-radius:7px;padding:10px;outline:none}.actions{display:flex;justify-content:flex-end;gap:7px;margin-top:13px}.actions button{border:1px solid var(--line);background:#fff;padding:7px 12px;border-radius:7px;cursor:pointer}.actions .save{background:var(--sky-strong);color:#fff;border-color:var(--sky-strong)}
 @media(max-width:900px){.app{height:auto;overflow:auto}.spread{grid-template-columns:1fr}.left{border-right:0;border-bottom:1px solid var(--line);height:650px}.right{height:720px}}
 
-/* 스티커 메모장 */
+/* 스티커 메모장: 긴 글을 편하게 작성하고 카드별 스크롤 */
 .tab-btn[data-view="stickies"]{background:#def2e3 !important;color:#49785d !important}
-.sticky-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:18px;padding:20px 4px;align-content:start}
-.sticky-card{min-height:220px;border-radius:5px;padding:12px;display:flex;flex-direction:column;box-shadow:0 5px 14px rgba(0,0,0,.09);transform:rotate(-.3deg)}
+.sticky-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:18px;padding:20px 4px;align-content:start;flex:1;min-height:0;overflow-y:auto}
+.sticky-card{height:370px;min-height:370px;min-width:0;border-radius:5px;padding:12px;display:flex;flex-direction:column;box-shadow:0 5px 14px rgba(0,0,0,.09);transform:rotate(-.3deg)}
 .sticky-card:nth-child(even){transform:rotate(.35deg)}
 .sticky-tools,.sticky-footer{display:flex;align-items:center;justify-content:space-between;gap:8px}
 .sticky-tools select{border:0;background:rgba(255,255,255,.55);padding:5px;border-radius:4px;font-size:12px}
 .sticky-delete{border:0;background:transparent;font-size:22px;cursor:pointer;color:#685d5d}
-.sticky-body{flex:1;width:100%;min-height:130px;resize:vertical;border:0;background:transparent;padding:10px 3px;font:inherit;font-size:15px;line-height:1.6;outline:none;color:#303030}
+.sticky-body{flex:1;width:100%;min-height:0;resize:none;overflow-y:auto;white-space:pre-wrap;overflow-wrap:anywhere;border:0;background:transparent;padding:10px 3px;font:inherit;font-size:15px;line-height:1.6;outline:none;color:#303030}
 .sticky-footer{font-size:11px;color:#666}
 .sticky-save{border:0;border-radius:5px;background:rgba(255,255,255,.7);padding:6px 13px;cursor:pointer;font-weight:700}
 .sticky-empty{color:var(--muted);font-size:14px}
-@media(max-width:650px){.sticky-grid{grid-template-columns:repeat(auto-fill,minmax(170px,1fr));gap:12px}}
+@media(max-width:650px){.sticky-grid{grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:12px}.sticky-card{height:420px;min-height:420px}}
 </style>
 
 <style>
@@ -526,9 +526,10 @@ html,body{min-width:0!important;overflow-x:auto!important}
   background:#dfeef8 !important;
   color:#58758a !important;
 }
+.tab-btn[data-view="stickies"]{background:#fff8dc !important;color:#82734c !important}
 .tab-btn[data-view="notepad"]{
-  background:#f7edcf !important;
-  color:#857344 !important;
+  background:#dff5eb !important;
+  color:#4f806d !important;
 }
 #settingsBtn{
   background:#ebe3f5 !important;
@@ -1582,10 +1583,10 @@ html,body{
   <header class="tab-top">
     <div class="brand">WORK DIARY</div>
     <nav class="main-tabs" aria-label="업무 다이어리 메뉴">
-      <button type="button" class="tab-btn" data-view="monthly">MONTHLY</button>
-      <button type="button" class="tab-btn active" data-view="weekly">WEEKLY</button>
-      <button type="button" class="tab-btn" data-view="notepad">📝 회의록</button>
-      <button type="button" class="tab-btn" data-view="stickies">📌 스티커 메모장</button>
+      <button type="button" class="tab-btn" data-view="monthly">월간계획</button>
+      <button type="button" class="tab-btn active" data-view="weekly">주간계획</button>
+      <button type="button" class="tab-btn" data-view="stickies">메모</button>
+      <button type="button" class="tab-btn" data-view="notepad">회의록</button>
       <button type="button" class="tab-btn settings-tab" id="settingsBtn">⚙️ 설정</button>
     </nav>
     <div class="top-right">
@@ -1631,16 +1632,18 @@ html,body{
             </div>
           </section>
 
+
+        </div>
+      </div>
+    </section>
+
     <section class="view-panel" id="stickiesView">
       <div class="notepad-page sticky-page">
         <div class="notepad-head">
-          <div><div class="title">스티커 메모장</div><div class="notepad-sub">짧은 업무 메모를 붙여두고 필요할 때 수정하세요.</div></div>
+          <div><div class="title">메모</div><div class="notepad-sub">업무 메모를 길게 작성하고 필요할 때 수정하세요.</div></div>
           <button type="button" id="newSticky">+ 스티커 추가</button>
         </div>
         <div id="stickyGrid" class="sticky-grid"></div>
-      </div>
-    </section>
-        </div>
       </div>
     </section>
   </main>
@@ -1773,7 +1776,7 @@ function normalizeServerDate(value){
 
 function rebuildState(rows){
   serverRows=Array.isArray(rows)?rows:[];
-  events={}; tasks={}; notes={};
+  events={}; tasks={}; notes={}; scratches=[]; stickies=[];
 
   serverRows.forEach(r=>{
     const dateKey=normalizeServerDate(r.date);
@@ -2213,6 +2216,7 @@ function renderStickies(){
       const body=card.querySelector('.sticky-body').value;
       const color=card.querySelector('.sticky-color').value;
       const feedback=card.querySelector('.sticky-feedback');
+      if(body.length>49000){feedback.textContent='글자 수 초과';alert('Google Sheets 저장을 위해 메모는 49,000자 이내로 작성해주세요.');return;}
       feedback.textContent='저장 중…';
       try{await apiPost({action:'update',id,content:body,color});s.body=body;s.color=color;feedback.textContent='저장됨';}
       catch(e){console.error(e);feedback.textContent='저장 실패';alert('스티커 저장에 실패했습니다.');}
