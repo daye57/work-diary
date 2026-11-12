@@ -1598,6 +1598,22 @@ html,body{
 .background-grid button::before{content:"";display:block;width:29px;height:23px;background:var(--swatch);border:1px solid #0002;border-radius:5px}
 .background-grid button.active{outline:2px solid var(--accent);font-weight:800}
 </style>
+<style>
+/* v12.22: 주간계획 일정이 3개 이상일 때 일정 영역 내부 스크롤 */
+#week .week-events,
+#week > .wday:nth-child(6) .week-events,
+#week > .wday:nth-child(7) .week-events{
+  overflow-y:auto !important;
+  overflow-x:hidden !important;
+  overscroll-behavior:contain;
+  scrollbar-width:thin;
+  scrollbar-color:#c5cbd0 transparent;
+  min-height:0;
+}
+#week .week-events::-webkit-scrollbar{width:6px}
+#week .week-events::-webkit-scrollbar-thumb{background:#c5cbd0;border-radius:8px}
+#week .week-events::-webkit-scrollbar-track{background:transparent}
+</style>
 </head>
 <body>
 <div class="app tab-app">
