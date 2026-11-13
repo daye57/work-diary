@@ -49,6 +49,35 @@
 .sticky-pin{border:0;border-radius:5px;background:rgba(255,255,255,.5);padding:5px 9px;cursor:pointer;font-size:12px;font-weight:700;color:#746b52}
 .sticky-pin.is-pinned{background:#fff6c8;color:#6e591a;box-shadow:inset 0 0 0 1px #d8be6b}
 .sticky-pin:disabled{opacity:.5;cursor:wait}
+
+/* v12.25: 홈 주간계획 7일 전체 + 소형 월간 달력 */
+.home-subtitle{font-size:12px;font-weight:500;color:#a18e82;margin-left:8px}
+.home-mini-month-card{margin-top:14px}
+.home-week-plan{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:7px}
+.home-plan-day{min-width:0;min-height:260px;border:1px solid #ece6df;background:#fcfaf7;border-radius:12px;padding:10px 7px;text-align:left;display:flex;flex-direction:column;gap:8px;color:#5c514a;cursor:pointer;font:inherit}
+.home-plan-day.is-today{background:#fff6e9;border-color:#e7c9ab}
+.home-plan-day:hover,.home-mini-date:hover{box-shadow:inset 0 0 0 1px #cbb9aa}
+.home-plan-date{font-size:13px;font-weight:700;border-bottom:1px solid #e8e1d8;padding-bottom:8px;text-align:center}
+.home-plan-date strong{font-size:17px;margin-left:3px}
+.home-plan-label{font-size:10px;color:#9b8779;font-weight:800;letter-spacing:.03em}
+.home-plan-list{display:block;min-width:0;max-height:126px;overflow-y:auto;overflow-x:hidden;scrollbar-width:thin;font-size:11px;line-height:1.45}
+.home-plan-event,.home-plan-task{overflow-wrap:anywhere;margin-bottom:5px}
+.home-plan-event{background:#fff;border-radius:5px;padding:4px 5px;border-left:3px solid #e7c9aa}
+.home-plan-task{display:flex;gap:4px;align-items:flex-start}
+.home-plan-task.is-done{text-decoration:line-through;opacity:.55}
+.home-plan-empty{color:#b7aba1;font-size:11px}
+.home-mini-month{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:3px}
+.home-mini-weekday{text-align:center;padding:6px 0;color:#827469;font-size:11px;font-weight:800}
+.home-mini-weekday.sun{color:#bd7c7c}
+.home-mini-date,.home-mini-blank{min-width:0;min-height:52px;border:1px solid #f0eae4;background:#fdfbf9;border-radius:6px;padding:5px;display:flex;flex-direction:column;gap:2px;text-align:left;color:#62544c;font:inherit}
+.home-mini-date{cursor:pointer}
+.home-mini-date.is-today{background:#fff1e3;border-color:#e5c6a9}
+.home-mini-date>span{font-size:12px;font-weight:700}
+.home-mini-holiday{font-size:9px;color:#b17b78;overflow:hidden;white-space:nowrap;text-overflow:ellipsis}
+.home-mini-events{font-size:9px;color:#877970;overflow:hidden;white-space:nowrap;text-overflow:ellipsis}
+.home-quick-grid{grid-template-columns:repeat(3,minmax(0,1fr))}
+@media(max-width:850px){.home-week-plan{overflow-x:auto;grid-template-columns:repeat(7,minmax(125px,1fr));padding-bottom:8px}.home-quick-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:480px){.home-quick-grid{grid-template-columns:1fr}.home-mini-date,.home-mini-blank{min-height:43px;padding:3px}.home-mini-events{display:none}}
 </style>
 
 <style>
@@ -1613,18 +1642,90 @@ html,body{
 #week .week-events::-webkit-scrollbar{width:6px}
 #week .week-events::-webkit-scrollbar-thumb{background:#c5cbd0;border-radius:8px}
 #week .week-events::-webkit-scrollbar-track{background:transparent}
+
+/* v12.23 - 다이어리 홈: 기존 화면과 독립적인 미리보기 */
+.tab-btn[data-view="home"]{background:#fff7e9;color:#816755}
+.tab-btn[data-view="home"].active{background:#f5e6d7;color:#6f4f3f}
+#homeView{overflow-y:auto;padding-bottom:22px}
+.home-page{max-width:1150px;margin:0 auto;padding:10px 2px 30px;color:#514740}
+.home-heading{display:flex;justify-content:space-between;align-items:center;margin:8px 0 22px}
+.home-kicker{font-size:11px;letter-spacing:.2em;color:#a78e80;font-weight:800}
+.home-heading h1{font-size:29px;margin:5px 0;color:#51453e}
+.home-heading p{font-size:13px;color:#97877d;margin:0}
+.home-emblem{width:56px;height:56px;display:grid;place-items:center;border-radius:17px;background:#fff;font-size:28px;box-shadow:0 4px 20px #6655440d}
+.home-card{border:1px solid #ece4dc;border-radius:17px;background:#fff;padding:20px;box-shadow:0 4px 20px #6353440a}
+.home-card-header{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:14px}
+.home-card-header h2{font-size:17px;margin:0}
+.home-small-link{border:0;background:#f6f1ec;color:#78675e;border-radius:9px;padding:8px 12px;font-weight:700;cursor:pointer}
+.home-weekstrip{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:7px;margin-bottom:14px}
+.home-day{border:0;border-radius:10px;background:#f7f5f2;display:flex;flex-direction:column;align-items:center;gap:5px;padding:10px 2px;color:#61544b;cursor:pointer}
+.home-day.today{background:#f8e8dc;box-shadow:inset 0 0 0 1px #eacdbd}
+.home-day .day-label{font-size:11px;color:#8e8078}
+.home-day .day-number{font-size:15px;font-weight:800}
+.home-day .day-count{height:7px;width:7px;border-radius:50%;background:#c69d89}
+.home-day .day-count.empty{background:transparent}
+.home-overview{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.home-overview-box{background:#faf8f5;border-radius:12px;padding:15px;min-height:120px}
+.home-overview-box h3{font-size:13px;color:#796a60;margin:0 0 11px}
+.home-overview-box ul{margin:0;padding-left:18px;display:grid;gap:7px;font-size:13px;line-height:1.45}
+.home-overview-box li{overflow-wrap:anywhere}
+.home-muted{font-size:13px;color:#a0948b}
+.home-quick-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:13px;margin-top:17px}
+.home-quick{border:0;border-radius:15px;min-height:168px;padding:18px;text-align:left;display:flex;flex-direction:column;align-items:flex-start;gap:8px;cursor:pointer;color:#514741;transition:transform .15s,box-shadow .15s}
+.home-quick:hover{transform:translateY(-2px);box-shadow:0 8px 20px #6655441a}
+.home-quick .quick-icon{font-size:24px}
+.home-quick strong{font-size:17px}
+.home-quick .quick-description{font-size:12px;line-height:1.5;color:#776b64;overflow-wrap:anywhere;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden}
+.home-quick .quick-arrow{margin-top:auto;align-self:flex-end;font-size:18px}
+.home-quick.monthly{background:#fae9e9}.home-quick.weekly{background:#e8f0fa}
+.home-quick.memo{background:#fff5de}.home-quick.meeting{background:#e5f4ec}
+@media(max-width:850px){.home-quick-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.home-overview{grid-template-columns:1fr}}
+
+/* v12.24: 홈에서는 중복되는 상단 메뉴를 숨기고, 각 상세 화면에서는 유지 */
+.tab-app.home-active .main-tabs .tab-btn[data-view="monthly"],
+.tab-app.home-active .main-tabs .tab-btn[data-view="weekly"],
+.tab-app.home-active .main-tabs .tab-btn[data-view="stickies"],
+.tab-app.home-active .main-tabs .tab-btn[data-view="notepad"]{display:none !important}
+.tab-app.home-active .tab-top{grid-template-columns:auto 1fr auto !important}
+.tab-app.home-active .main-tabs{justify-content:center !important}
+@media(max-width:900px){
+ .tab-app.home-active .tab-top{grid-template-columns:auto 1fr !important}
+ .tab-app.home-active .main-tabs{justify-content:flex-end !important}
+}
+
+/* v12.26: 홈 5일 주간계획 + 하단 좌우 분할 + 월간 일정 색상 */
+.home-week-plan{grid-template-columns:repeat(5,minmax(0,1fr))}
+.home-bottom-layout{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:14px;margin-top:14px;align-items:stretch}
+.home-bottom-layout .home-mini-month-card{margin-top:0;min-width:0;padding:15px}
+.home-bottom-layout .home-card-header{flex-wrap:wrap}
+.home-side-previews{display:grid;grid-template-rows:1fr 1fr;gap:14px;min-width:0}
+.home-side-preview{border:1px solid #ece4dc;border-radius:17px;padding:21px;text-align:left;display:flex;flex-direction:column;gap:16px;cursor:pointer;color:#514740;font:inherit;min-width:0;box-shadow:0 4px 20px #6353440a}
+.home-side-preview.memo{background:#fff9e9}
+.home-side-preview.meeting{background:#ecf8f1}
+.home-side-preview:hover{box-shadow:0 6px 18px #63534420}
+.home-side-title{font-size:18px;font-weight:800;display:flex;justify-content:space-between;align-items:center}
+.home-side-title span{font-size:12px;font-weight:600;color:#88796d}
+.home-side-description{font-size:14px;line-height:1.7;overflow-wrap:anywhere;white-space:pre-wrap;display:-webkit-box;-webkit-line-clamp:5;-webkit-box-orient:vertical;overflow:hidden}
+.home-mini-date{min-height:64px;overflow:hidden}
+.home-mini-event-list{display:flex;flex-direction:column;gap:2px;min-width:0;width:100%}
+.home-mini-event{font-size:9px;line-height:1.35;border-radius:3px;padding:2px 3px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;display:block;max-width:100%;color:#514740}
+.home-mini-more{font-size:9px;color:#8a7c70}
+@media(max-width:850px){.home-week-plan{grid-template-columns:repeat(5,minmax(135px,1fr))}}
+@media(max-width:680px){.home-bottom-layout{grid-template-columns:1fr}.home-side-previews{grid-template-columns:1fr 1fr;grid-template-rows:auto}.home-side-preview{min-height:155px;padding:14px}}
+@media(max-width:440px){.home-side-previews{grid-template-columns:1fr}.home-mini-event{font-size:8px}.home-mini-date{padding:3px}}
 </style>
 </head>
 <body>
-<div class="app tab-app">
+<div class="app tab-app home-active">
   <header class="tab-top">
     <div class="brand">WORK DIARY</div>
     <nav class="main-tabs" aria-label="업무 다이어리 메뉴">
-      <button type="button" class="tab-btn" data-view="monthly">월간계획</button>
-      <button type="button" class="tab-btn active" data-view="weekly">주간계획</button>
+      <button type="button" class="tab-btn active" data-view="home">홈</button>
+      
+      
       <button type="button" class="tab-btn" data-view="stickies">메모</button>
       <button type="button" class="tab-btn" data-view="notepad">회의록</button>
-      <button type="button" class="tab-btn settings-tab" id="settingsBtn">⚙️ 설정</button>
+      <button type="button" class="tab-btn settings-tab" id="settingsBtn">설정</button>
     </nav>
     <div class="top-right">
       <div class="sync-status" id="syncStatus">Google Sheets 연결 중…</div>
@@ -1633,6 +1734,25 @@ html,body{
   </header>
 
   <main class="view-stage">
+    <section class="view-panel active" id="homeView">
+      <div class="home-page">
+        <div class="home-heading"><div><div class="home-kicker">MY WORK DIARY</div><h1 id="homeMonth">나의 업무 다이어리</h1><p>이번 주 일정과 중요한 메모를 한눈에 확인하세요.</p></div><div class="home-emblem" aria-hidden="true">📖</div></div>
+        <section class="home-card" aria-label="이번 주 주간계획 미리보기">
+          <div class="home-card-header"><h2>주간계획 <span id="homeWeekRange" class="home-subtitle"></span></h2><button type="button" class="home-small-link" data-home-go="weekly">주간계획 열기 ›</button></div>
+          <div class="home-week-plan" id="homeWeekPlan"></div>
+        </section>
+        <div class="home-bottom-layout">
+          <section class="home-card home-mini-month-card" aria-label="월간계획 달력 미리보기">
+            <div class="home-card-header"><h2>월간계획 <span id="homeMiniMonthTitle" class="home-subtitle"></span></h2><button type="button" class="home-small-link" data-home-go="monthly">전체 보기 ›</button></div>
+            <div class="home-mini-month" id="homeMiniMonth"></div>
+          </section>
+          <div class="home-side-previews" aria-label="메모와 회의록 미리보기">
+            <button type="button" class="home-side-preview memo" data-home-go="stickies"><span class="home-side-title">메모 <span>열기 ›</span></span><span class="home-side-description" id="homeMemoPreview">고정 메모를 미리 볼 수 있어요.</span></button>
+            <button type="button" class="home-side-preview meeting" data-home-go="notepad"><span class="home-side-title">회의록 <span>열기 ›</span></span><span class="home-side-description" id="homeMeetingPreview">최근 작성한 회의록을 확인하세요.</span></button>
+          </div>
+        </div>
+      </div>
+    </section>
     <section class="view-panel" id="monthlyView">
       <div class="monthly-full">
         <div class="section-head"><div class="title">Monthly</div><div class="nav"><button id="pm">‹</button><strong id="ml"></strong><button id="nm">›</button></div></div>
@@ -1641,7 +1761,7 @@ html,body{
       </div>
     </section>
 
-    <section class="view-panel active" id="weeklyView">
+    <section class="view-panel" id="weeklyView">
       <div class="weekly-full">
         <div class="week-head"><div><span class="title">Weekly</span> <span class="week-range" id="wr"></span></div><div class="weeknav"><button id="pw">‹</button><button id="tw" title="이번 주">·</button><button id="nw">›</button></div></div>
         <div class="weekbody" id="week"></div>
@@ -1869,7 +1989,7 @@ async function loadFromServer(){
       : (Array.isArray(response?.rows) ? response.rows : []));
     rebuildState(rows);
     setSync('Google Sheets 연결됨','ok');
-    renderCal(); renderWeek();
+    renderCal(); renderWeek(); renderHome();
   }catch(err){
     console.error(err);
     setSync('연결 실패','error');
@@ -2201,13 +2321,54 @@ async function saveNote(date,position,content){
 
 
 /* ---------- 화면 탭 ---------- */
-let currentView='weekly';
+function renderHome(){
+  const root=document.getElementById('homeView');if(!root)return;
+  const todayDate=new Date();todayDate.setHours(0,0,0,0);
+  const todayKey=key(todayDate), start=monday(todayDate);
+  $('#homeMonth').textContent=`${todayDate.getFullYear()}년 ${todayDate.getMonth()+1}월`;
+  const weekDates=Array.from({length:5},(_,i)=>{const d=new Date(start);d.setDate(d.getDate()+i);return d});
+  const last=weekDates[4];
+  $('#homeWeekRange').textContent=`${start.getMonth()+1}.${start.getDate()} ~ ${last.getMonth()+1}.${last.getDate()}`;
+  $('#homeWeekPlan').innerHTML=weekDates.map((d,i)=>{
+    const k=key(d), ev=events[k]||[], ts=tasks[k]||[], today=k===todayKey;
+    const schedule=ev.length?ev.map(e=>`<div class="home-plan-event ${e.color?'mark-'+e.color:''}">${esc(e.text)}</div>`).join(''):'<span class="home-plan-empty">일정 없음</span>';
+    const todos=ts.length?ts.map(t=>`<div class="home-plan-task ${t.done?'is-done':''}"><span>${t.done?'☑':'☐'}</span><span>${esc(t.text)}</span></div>`).join(''):'<span class="home-plan-empty">할 일 없음</span>';
+    return `<button type="button" class="home-plan-day ${today?'is-today':''}" data-home-date="${k}" title="${d.getMonth()+1}월 ${d.getDate()}일 주간계획 열기"><span class="home-plan-date">${['월','화','수','목','금','토','일'][i]} <strong>${d.getDate()}</strong></span><span class="home-plan-label">일정</span><span class="home-plan-list">${schedule}</span><span class="home-plan-label">할 일</span><span class="home-plan-list">${todos}</span></button>`;
+  }).join('');
+  const y=todayDate.getFullYear(),m=todayDate.getMonth();
+  buildHolidays(y);
+  $('#homeMiniMonthTitle').textContent=`${y}년 ${m+1}월`;
+  const first=new Date(y,m,1).getDay(),lastDate=new Date(y,m+1,0).getDate();
+  const cells=[];
+  for(let i=0;i<first;i++)cells.push(null);
+  for(let d=1;d<=lastDate;d++)cells.push(new Date(y,m,d));
+  while(cells.length%7)cells.push(null);
+  $('#homeMiniMonth').innerHTML=['일','월','화','수','목','금','토'].map((x,i)=>`<span class="home-mini-weekday ${i===0?'sun':''}">${x}</span>`).join('')+cells.map(d=>{
+    if(!d)return '<span class="home-mini-blank"></span>';
+    const k=key(d),ev=events[k]||[],hol=holidays[k]||'',isToday=k===todayKey;
+    return `<button type="button" class="home-mini-date ${isToday?'is-today':''}" data-home-month-date="${k}" title="${esc(hol||'')} ${ev.length}개 일정"><span>${d.getDate()}</span>${hol?`<small class="home-mini-holiday">${esc(hol)}</small>`:''}${ev.length?`<span class="home-mini-event-list">${ev.slice(0,3).map(x=>`<small class="home-mini-event ${x.color?'mark-'+x.color:''}">${esc(x.text)}</small>`).join('')}${ev.length>3?`<small class="home-mini-more">+${ev.length-3}</small>`:''}</span>`:''}</button>`;
+  }).join('');
+  
+
+  const pinned=[...stickies].filter(s=>s.pinOrder!=null).sort((a,b)=>a.pinOrder-b.pinOrder);
+  const firstSticky=pinned[0]||stickies[0];
+  $('#homeMemoPreview').textContent=firstSticky?(firstSticky.title||firstSticky.body||'제목 없는 메모').slice(0,80):'고정 메모를 미리 볼 수 있어요.';
+  const recentScratch=[...scratches].sort((a,b)=>String(b.updatedAt||b.date||'').localeCompare(String(a.updatedAt||a.date||'')))[0];
+  $('#homeMeetingPreview').textContent=recentScratch?recentScratch.title:'최근 작성한 회의록을 확인하세요.';
+  root.querySelectorAll('[data-home-go]').forEach(btn=>btn.onclick=()=>showView(btn.dataset.homeGo));
+  root.querySelectorAll('[data-home-date]').forEach(btn=>btn.onclick=()=>{const [y,m,d]=btn.dataset.homeDate.split('-').map(Number);selected=new Date(y,m-1,d);weekStart=monday(selected);showView('weekly')});
+  root.querySelectorAll('[data-home-month-date]').forEach(btn=>btn.onclick=()=>{const [y,m,d]=btn.dataset.homeMonthDate.split('-').map(Number);selected=new Date(y,m-1,d);month=new Date(y,m-1,1);showView('monthly')});
+}
+
+let currentView='home';
 function showView(view){
   currentView=view;
+  document.querySelector('.tab-app')?.classList.toggle('home-active',view==='home');
   document.querySelectorAll('.view-panel').forEach(v=>v.classList.remove('active'));
   document.querySelectorAll('.tab-btn[data-view]').forEach(b=>b.classList.toggle('active',b.dataset.view===view));
   const target=document.getElementById(view+'View');
   if(target) target.classList.add('active');
+  if(view==='home') renderHome();
   if(view==='monthly') renderCal();
   if(view==='weekly') renderWeek();
   if(view==='stickies') renderStickies();
@@ -2489,7 +2650,7 @@ $('#eventText').onkeydown=e=>{if(e.key==='Enter')$('#save').click()};
 $('#modal').onclick=e=>{if(e.target.id==='modal')$('#modal').classList.remove('on')};
 $('#today').textContent=new Intl.DateTimeFormat('ko-KR',{year:'numeric',month:'long',day:'numeric',weekday:'long'}).format(now);
 
-renderCal();renderWeek();showView('weekly');
+renderCal();renderWeek();showView('home');
 loadFromServer();
 
 </script>
