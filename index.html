@@ -78,6 +78,13 @@
 .home-quick-grid{grid-template-columns:repeat(3,minmax(0,1fr))}
 @media(max-width:850px){.home-week-plan{overflow-x:auto;grid-template-columns:repeat(7,minmax(125px,1fr));padding-bottom:8px}.home-quick-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
 @media(max-width:480px){.home-quick-grid{grid-template-columns:1fr}.home-mini-date,.home-mini-blank{min-height:43px;padding:3px}.home-mini-events{display:none}}
+
+/* v12.30: 홈 메모/회의록 제목 목록, 카드 내부만 스크롤 */
+.tab-app.home-active .home-side-preview{min-height:0!important}
+.tab-app.home-active .home-side-description{display:flex!important;flex-direction:column;gap:5px;min-height:0;flex:1 1 auto;overflow-y:auto!important;overflow-x:hidden!important;-webkit-line-clamp:unset!important;white-space:normal!important;overscroll-behavior:contain}
+.home-preview-line{display:block;flex:0 0 auto;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;padding:2px 0 3px;border-bottom:1px solid #8b7d6b1a;text-align:left}
+.home-preview-line::before{content:'•';margin-right:7px;color:#a49b8f}
+.home-preview-empty{color:#92877c}
 </style>
 
 <style>
@@ -1646,8 +1653,8 @@ html,body{
 /* v12.23 - 다이어리 홈: 기존 화면과 독립적인 미리보기 */
 .tab-btn[data-view="home"]{background:#fff7e9;color:#816755}
 .tab-btn[data-view="home"].active{background:#f5e6d7;color:#6f4f3f}
-#homeView{overflow-y:auto;padding-bottom:22px}
-.home-page{max-width:1150px;margin:0 auto;padding:10px 2px 30px;color:#514740}
+#homeView{overflow-y:auto;padding-bottom:8px}
+.home-page{max-width:1150px;margin:0 auto;padding:2px 2px 8px;color:#514740}
 .home-heading{display:flex;justify-content:space-between;align-items:center;margin:8px 0 22px}
 .home-kicker{font-size:11px;letter-spacing:.2em;color:#a78e80;font-weight:800}
 .home-heading h1{font-size:29px;margin:5px 0;color:#51453e}
@@ -1714,6 +1721,42 @@ html,body{
 @media(max-width:680px){.home-bottom-layout{grid-template-columns:1fr}.home-side-previews{grid-template-columns:1fr 1fr;grid-template-rows:auto}.home-side-preview{min-height:155px;padding:14px}}
 @media(max-width:440px){.home-side-previews{grid-template-columns:1fr}.home-mini-event{font-size:8px}.home-mini-date{padding:3px}}
 </style>
+
+<style>
+/* v12.28: 홈 화면만 브라우저 높이에 맞춤. 페이지 우측 세로 스크롤 방지 */
+html:has(.tab-app.home-active),
+body:has(.tab-app.home-active){height:100%;overflow-y:hidden!important}
+.tab-app.home-active{height:100dvh!important;max-height:100dvh!important;overflow:hidden!important;box-sizing:border-box!important;display:flex!important;flex-direction:column!important}
+.tab-app.home-active .tab-top{flex:0 0 auto!important}
+.tab-app.home-active .view-stage{flex:1 1 auto!important;min-height:0!important;height:auto!important;overflow:hidden!important;padding-top:8px!important}
+.tab-app.home-active #homeView{height:100%!important;min-height:0!important;overflow:hidden!important;padding-bottom:0!important}
+.tab-app.home-active .home-page{height:100%!important;min-height:0!important;box-sizing:border-box!important;display:grid!important;grid-template-rows:minmax(0, .95fr) minmax(0, 1.05fr)!important;gap:9px!important;padding:0 2px 2px!important}
+.tab-app.home-active .home-page>.home-card{min-height:0!important;overflow:hidden!important}
+.tab-app.home-active .home-card{padding:10px!important;box-sizing:border-box!important}
+.tab-app.home-active .home-card-header{margin-bottom:7px!important;min-height:25px!important}
+.tab-app.home-active .home-card-header h2{font-size:14px!important}
+.tab-app.home-active .home-bottom-layout{margin-top:0!important;min-height:0!important;overflow:hidden!important;gap:10px!important}
+.tab-app.home-active .home-week-plan{height:calc(100% - 34px)!important;min-height:0!important;overflow:hidden!important;gap:6px!important}
+.tab-app.home-active .home-plan-day{height:100%!important;min-height:0!important;overflow:hidden!important;padding:7px!important;gap:5px!important}
+.tab-app.home-active .home-plan-date{padding-bottom:4px!important}
+.tab-app.home-active .home-plan-list{min-height:0!important;max-height:none!important;overflow-y:auto!important;scrollbar-width:thin}
+.tab-app.home-active .home-mini-month-card{min-height:0!important;overflow:hidden!important;padding:9px!important;display:flex!important;flex-direction:column!important}
+.tab-app.home-active .home-mini-month{flex:1 1 auto!important;min-height:0!important;grid-template-rows:22px repeat(6,minmax(0,1fr))!important;gap:2px!important;overflow:hidden!important}
+.tab-app.home-active .home-mini-weekday{padding:2px 0!important;font-size:10px!important}
+.tab-app.home-active .home-mini-date,.tab-app.home-active .home-mini-blank{min-height:0!important;height:100%!important;overflow:hidden!important;padding:2px!important;gap:1px!important}
+.tab-app.home-active .home-mini-date>span{font-size:10px!important;line-height:1.1!important}
+.tab-app.home-active .home-mini-event{font-size:8px!important;padding:1px 2px!important;line-height:1.1!important}
+.tab-app.home-active .home-side-previews{min-height:0!important;gap:10px!important}
+.tab-app.home-active .home-side-preview{min-height:0!important;overflow:hidden!important;padding:12px!important;gap:7px!important}
+.tab-app.home-active .home-side-title{font-size:15px!important}
+.tab-app.home-active .home-side-description{font-size:12px!important;line-height:1.4!important;-webkit-line-clamp:4!important}
+@media(max-height:700px){
+ .tab-app.home-active{padding-top:7px!important;padding-bottom:7px!important}
+ .tab-app.home-active .home-page{grid-template-rows:minmax(0, .9fr) minmax(0, 1.1fr)!important;gap:6px!important}
+ .tab-app.home-active .home-mini-event-list{display:none!important}
+ .tab-app.home-active .home-card-header{margin-bottom:3px!important}
+}
+</style>
 </head>
 <body>
 <div class="app tab-app home-active">
@@ -1721,8 +1764,8 @@ html,body{
     <div class="brand">WORK DIARY</div>
     <nav class="main-tabs" aria-label="업무 다이어리 메뉴">
       <button type="button" class="tab-btn active" data-view="home">홈</button>
-      
-      
+      <button type="button" class="tab-btn" data-view="monthly">월간계획</button>
+      <button type="button" class="tab-btn" data-view="weekly">주간계획</button>
       <button type="button" class="tab-btn" data-view="stickies">메모</button>
       <button type="button" class="tab-btn" data-view="notepad">회의록</button>
       <button type="button" class="tab-btn settings-tab" id="settingsBtn">설정</button>
@@ -1736,7 +1779,6 @@ html,body{
   <main class="view-stage">
     <section class="view-panel active" id="homeView">
       <div class="home-page">
-        <div class="home-heading"><div><div class="home-kicker">MY WORK DIARY</div><h1 id="homeMonth">나의 업무 다이어리</h1><p>이번 주 일정과 중요한 메모를 한눈에 확인하세요.</p></div><div class="home-emblem" aria-hidden="true">📖</div></div>
         <section class="home-card" aria-label="이번 주 주간계획 미리보기">
           <div class="home-card-header"><h2>주간계획 <span id="homeWeekRange" class="home-subtitle"></span></h2><button type="button" class="home-small-link" data-home-go="weekly">주간계획 열기 ›</button></div>
           <div class="home-week-plan" id="homeWeekPlan"></div>
@@ -1780,8 +1822,8 @@ html,body{
         <div class="notepad-layout">
           <aside class="scratch-list" id="scratchList"></aside>
           <section class="scratch-editor">
-            <input id="scratchTitle" placeholder="제목 (예: 10/26 팀회의)">
-            <textarea id="scratchBody" placeholder="회의 내용을 자유롭게 작성하세요."></textarea>
+            <input id="scratchTitle" spellcheck="false" autocorrect="off" placeholder="제목 (예: 10/26 팀회의)">
+            <textarea id="scratchBody" spellcheck="false" autocorrect="off" placeholder="회의 내용을 자유롭게 작성하세요."></textarea>
             <div class="scratch-meta" id="scratchMeta">새 메모</div>
             <div class="scratch-actions">
               <button type="button" class="danger" id="deleteScratch" disabled>삭제</button>
@@ -1943,6 +1985,24 @@ function normalizeServerDate(value){
   return `${obj.year}-${obj.month}-${obj.day}`;
 }
 
+// 메모 제목·고정 정보는 기존 Apps Script가 확실히 갱신하는 E열(내용)에 함께 저장합니다.
+// 구형 메모(일반 본문)는 그대로 읽고, 메타데이터는 화면에서 숨깁니다.
+const STICKY_META_PREFIX='__WORK_DIARY_STICKY_META_V1__:';
+function encodeStickyContent(body,title,pinOrder){
+  const metadata=JSON.stringify({title:String(title||''),pinOrder:pinOrder==null?null:Number(pinOrder)});
+  return STICKY_META_PREFIX+metadata+'\n'+String(body??'');
+}
+function decodeStickyContent(raw){
+  const content=String(raw??'');
+  if(!content.startsWith(STICKY_META_PREFIX))return {body:content,meta:null};
+  const newline=content.indexOf('\n');
+  if(newline<0)return {body:content,meta:null};
+  try{
+    const meta=JSON.parse(content.slice(STICKY_META_PREFIX.length,newline));
+    if(!meta||typeof meta.title!=='string'||!(meta.pinOrder==null||Number.isFinite(meta.pinOrder)))throw Error('invalid sticky metadata');
+    return {body:content.slice(newline+1),meta};
+  }catch(e){return {body:content,meta:null};}
+}
 function rebuildState(rows){
   serverRows=Array.isArray(rows)?rows:[];
   events={}; tasks={}; notes={}; scratches=[]; stickies=[];
@@ -1965,7 +2025,10 @@ function rebuildState(rows){
       const rawTitle=String(r.position??'');
       const pinMatch=rawTitle.match(/^\[\[PIN:(\d{6})\]\]/);
       const cleanTitle=pinMatch?rawTitle.slice(pinMatch[0].length):rawTitle;
-      stickies.push({id:r.id,title:cleanTitle==='스티커'?'':cleanTitle,body:String(r.content??''),date:dateKey,color:String(r.color??''),pinOrder:pinMatch?Number(pinMatch[1]):null});
+      const decoded=decodeStickyContent(r.content);
+      const savedTitle=decoded.meta?decoded.meta.title:(cleanTitle==='스티커'?'':cleanTitle);
+      const savedPin=decoded.meta?decoded.meta.pinOrder:(pinMatch?Number(pinMatch[1]):null);
+      stickies.push({id:r.id,title:savedTitle,body:decoded.body,date:dateKey,color:String(r.color??''),pinOrder:savedPin});
     }else if(r.type==='scratch'){
       scratches.push({
         id:r.id,
@@ -2325,7 +2388,6 @@ function renderHome(){
   const root=document.getElementById('homeView');if(!root)return;
   const todayDate=new Date();todayDate.setHours(0,0,0,0);
   const todayKey=key(todayDate), start=monday(todayDate);
-  $('#homeMonth').textContent=`${todayDate.getFullYear()}년 ${todayDate.getMonth()+1}월`;
   const weekDates=Array.from({length:5},(_,i)=>{const d=new Date(start);d.setDate(d.getDate()+i);return d});
   const last=weekDates[4];
   $('#homeWeekRange').textContent=`${start.getMonth()+1}.${start.getDate()} ~ ${last.getMonth()+1}.${last.getDate()}`;
@@ -2350,11 +2412,22 @@ function renderHome(){
   }).join('');
   
 
-  const pinned=[...stickies].filter(s=>s.pinOrder!=null).sort((a,b)=>a.pinOrder-b.pinOrder);
-  const firstSticky=pinned[0]||stickies[0];
-  $('#homeMemoPreview').textContent=firstSticky?(firstSticky.title||firstSticky.body||'제목 없는 메모').slice(0,80):'고정 메모를 미리 볼 수 있어요.';
-  const recentScratch=[...scratches].sort((a,b)=>String(b.updatedAt||b.date||'').localeCompare(String(a.updatedAt||a.date||'')))[0];
-  $('#homeMeetingPreview').textContent=recentScratch?recentScratch.title:'최근 작성한 회의록을 확인하세요.';
+  // 홈 미리보기: 본문 대신 제목을 한 줄씩 표시합니다. 고정 메모는 고정 순서 우선.
+  const orderedStickies=[...stickies].sort((a,b)=>{
+    const ap=a.pinOrder!=null,bp=b.pinOrder!=null;
+    if(ap!==bp)return ap?-1:1;
+    if(ap&&bp)return a.pinOrder-b.pinOrder;
+    return 0;
+  });
+  const memoTitles=orderedStickies.map(s=>String(s.title||'제목 없는 메모').trim()||'제목 없는 메모');
+  const meetingTitles=[...scratches]
+    .sort((a,b)=>String(b.updatedAt||b.date||'').localeCompare(String(a.updatedAt||a.date||'')))
+    .map(s=>String(s.title||'제목 없는 회의록').trim()||'제목 없는 회의록');
+  const titleLines=(titles,empty)=>titles.length
+    ?titles.map(t=>`<span class="home-preview-line" title="${esc(t)}">${esc(t)}</span>`).join('')
+    :`<span class="home-preview-empty">${empty}</span>`;
+  $('#homeMemoPreview').innerHTML=titleLines(memoTitles,'작성된 메모가 없어요.');
+  $('#homeMeetingPreview').innerHTML=titleLines(meetingTitles,'작성된 회의록이 없어요.');
   root.querySelectorAll('[data-home-go]').forEach(btn=>btn.onclick=()=>showView(btn.dataset.homeGo));
   root.querySelectorAll('[data-home-date]').forEach(btn=>btn.onclick=()=>{const [y,m,d]=btn.dataset.homeDate.split('-').map(Number);selected=new Date(y,m-1,d);weekStart=monday(selected);showView('weekly')});
   root.querySelectorAll('[data-home-month-date]').forEach(btn=>btn.onclick=()=>{const [y,m,d]=btn.dataset.homeMonthDate.split('-').map(Number);selected=new Date(y,m-1,d);month=new Date(y,m-1,1);showView('monthly')});
@@ -2448,9 +2521,9 @@ function renderStickies(){
       const title=card.querySelector('.sticky-title').value.trim();
       const color=card.querySelector('.sticky-color').value;
       const feedback=card.querySelector('.sticky-feedback');
-      if(body.length>49000){feedback.textContent='글자 수 초과';alert('Google Sheets 저장을 위해 메모는 49,000자 이내로 작성해주세요.');return;}
+      if(encodeStickyContent(body,title,s.pinOrder).length>49000){feedback.textContent='글자 수 초과';alert('Google Sheets 저장을 위해 메모는 49,000자 이내로 작성해주세요.');return;}
       feedback.textContent='저장 중…';
-      try{await apiPost({action:'update',id,position:encodeStickyTitle(title,s.pinOrder),content:body,color});s.title=title;s.body=body;s.color=color;feedback.textContent='저장됨';}
+      try{await apiPost({action:'update',id,position:encodeStickyTitle(title,s.pinOrder),content:encodeStickyContent(body,title,s.pinOrder),color});s.title=title;s.body=body;s.color=color;feedback.textContent='저장됨';}
       catch(e){console.error(e);feedback.textContent='저장 실패';alert('스티커 저장에 실패했습니다.');}
     };
     card.querySelector('.sticky-save').onclick=save;
@@ -2461,9 +2534,9 @@ function renderStickies(){
       const title=card.querySelector('.sticky-title').value.trim();
       const body=card.querySelector('.sticky-body').value;
       const color=card.querySelector('.sticky-color').value;
-      if(body.length>49000){alert('메모는 49,000자 이내로 작성해주세요.');btn.disabled=false;return;}
+      if(encodeStickyContent(body,title,nextOrder).length>49000){alert('메모는 49,000자 이내로 작성해주세요.');btn.disabled=false;return;}
       try{
-        await apiPost({action:'update',id,position:encodeStickyTitle(title,nextOrder),content:body,color});
+        await apiPost({action:'update',id,position:encodeStickyTitle(title,nextOrder),content:encodeStickyContent(body,title,nextOrder),color});
         Object.assign(s,{title,body,color,pinOrder:nextOrder});
         renderStickies();
       }catch(e){console.error(e);btn.disabled=false;alert('메모 고정 상태를 저장하지 못했습니다.');}
