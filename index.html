@@ -85,6 +85,14 @@
 .home-preview-line{display:block;flex:0 0 auto;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;padding:2px 0 3px;border-bottom:1px solid #8b7d6b1a;text-align:left}
 .home-preview-line::before{content:'•';margin-right:7px;color:#a49b8f}
 .home-preview-empty{color:#92877c}
+
+/* 회의록 전용 서식 편집기 */
+.scratch-toolbar{display:flex;flex-wrap:wrap;gap:6px;padding:8px;background:var(--card,#fff);border:1px solid var(--line);border-radius:8px}
+.scratch-toolbar button{padding:6px 10px;border:1px solid var(--line);border-radius:6px;background:transparent;color:inherit;cursor:pointer;font:inherit;font-size:12px}
+.scratch-toolbar button:hover{background:rgba(125,125,125,.1)}
+.notepad-page #scratchBody.scratch-rich-editor{display:block;box-sizing:border-box;flex:1;min-height:300px;max-height:100%;overflow-y:auto;white-space:pre-wrap;overflow-wrap:anywhere;outline:none;resize:none;cursor:text}
+.scratch-rich-editor:empty:before{content:attr(data-placeholder);color:var(--muted);pointer-events:none}
+.scratch-rich-editor ul,.scratch-rich-editor ol{padding-left:24px;margin:8px 0}
 </style>
 
 <style>
@@ -1823,7 +1831,14 @@ body:has(.tab-app.home-active){height:100%;overflow-y:hidden!important}
           <aside class="scratch-list" id="scratchList"></aside>
           <section class="scratch-editor">
             <input id="scratchTitle" spellcheck="false" autocorrect="off" placeholder="제목 (예: 10/26 팀회의)">
-            <textarea id="scratchBody" spellcheck="false" autocorrect="off" placeholder="회의 내용을 자유롭게 작성하세요."></textarea>
+            <div class="scratch-toolbar" role="toolbar" aria-label="회의록 글자 서식">
+              <button type="button" data-scratch-format="bold" title="굵게 (Ctrl+B)"><b>굵게</b></button>
+              <button type="button" data-scratch-format="underline" title="밑줄 (Ctrl+U)"><u>밑줄</u></button>
+              <button type="button" data-scratch-format="italic" title="기울임 (Ctrl+I)"><i>기울임</i></button>
+              <button type="button" data-scratch-format="insertUnorderedList" title="글머리 기호">• 목록</button>
+              <button type="button" data-scratch-format="removeFormat" title="선택한 글자의 서식 지우기">서식 지우기</button>
+            </div>
+            <div id="scratchBody" class="scratch-rich-editor" contenteditable="true" role="textbox" aria-label="회의록 본문" aria-multiline="true" spellcheck="false" autocorrect="off" data-placeholder="회의 내용을 자유롭게 작성하세요."></div>
             <div class="scratch-meta" id="scratchMeta">새 메모</div>
             <div class="scratch-actions">
               <button type="button" class="danger" id="deleteScratch" disabled>삭제</button>
@@ -2559,6 +2574,50 @@ $('#newSticky').onclick=async()=>{
   }catch(e){console.error(e);alert('스티커를 추가하지 못했습니다.');}
 };
 
+/* ---------- 회의록: 일반 텍스트 호환 + 서식 저장 ---------- */
+const SCRATCH_RICH_PREFIX='[[RICH_HTML_V1]]';
+function sanitizeScratchHtml(html){
+  const template=document.createElement('template');template.innerHTML=html;
+  const allowed=new Set(['B','STRONG','U','I','EM','BR','DIV','P','UL','OL','LI']);
+  function clean(node){
+    for(const child of [...node.childNodes]){
+      if(child.nodeType===8){child.remove();continue;}
+      if(child.nodeType===3)continue;
+      if(child.nodeType!==1){child.remove();continue;}
+      if(!allowed.has(child.tagName)){
+        // Remove unsupported elements and their attributes, preserve only safe text.
+        const replacement=document.createTextNode(child.textContent||'');child.replaceWith(replacement);continue;
+      }
+      for(const attr of [...child.attributes])child.removeAttribute(attr.name);
+      clean(child);
+    }
+  }
+  clean(template.content);
+  return template.innerHTML;
+}
+function loadScratchBody(raw){
+  const editor=$('#scratchBody');
+  if(String(raw||'').startsWith(SCRATCH_RICH_PREFIX)) editor.innerHTML=sanitizeScratchHtml(String(raw).slice(SCRATCH_RICH_PREFIX.length));
+  else editor.textContent=raw||'';
+}
+function serializeScratchBody(){
+  const editor=$('#scratchBody');
+  const html=sanitizeScratchHtml(editor.innerHTML);
+  return SCRATCH_RICH_PREFIX+html;
+}
+document.querySelectorAll('[data-scratch-format]').forEach(btn=>{
+  btn.addEventListener('mousedown',e=>e.preventDefault());
+  btn.addEventListener('click',()=>{
+    $('#scratchBody').focus();
+    document.execCommand(btn.dataset.scratchFormat,false,null);
+  });
+});
+$('#scratchBody').addEventListener('paste',e=>{
+  e.preventDefault();
+  const text=e.clipboardData.getData('text/plain');
+  document.execCommand('insertText',false,text);
+});
+
 /* ---------- 메모장 ---------- */
 let activeScratchId='';
 
@@ -2581,7 +2640,7 @@ function renderScratchList(){
 function newScratch(){
   activeScratchId='';
   $('#scratchTitle').value='';
-  $('#scratchBody').value='';
+  loadScratchBody('');
   $('#scratchMeta').textContent='새 메모';
   $('#deleteScratch').disabled=true;
   renderScratchList();
@@ -2591,7 +2650,7 @@ function openScratch(id){
   const s=scratches.find(x=>String(x.id)===String(id)); if(!s)return;
   activeScratchId=s.id;
   $('#scratchTitle').value=s.title==='제목 없는 메모'?'':s.title;
-  $('#scratchBody').value=s.body||'';
+  loadScratchBody(s.body||'');
   $('#scratchMeta').textContent='마지막 저장: '+scratchDateText(s);
   $('#deleteScratch').disabled=false;
   renderScratchList();
@@ -2600,8 +2659,8 @@ $('#newScratch').onclick=newScratch;
 
 $('#saveScratch').onclick=async()=>{
   const title=$('#scratchTitle').value.trim()||'제목 없는 메모';
-  const body=$('#scratchBody').value;
-  if(!body.trim() && title==='제목 없는 메모'){alert('메모 내용을 입력해주세요.');return}
+  const body=serializeScratchBody();
+  if(!$('#scratchBody').textContent.trim() && title==='제목 없는 메모'){alert('메모 내용을 입력해주세요.');return}
   const now=new Date();
   const date=key(now);
   try{
