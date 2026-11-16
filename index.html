@@ -1345,7 +1345,7 @@ html,body{
   line-height:15px !important;
 }
 
-/* TODO는 한 열 전체 폭. 등록된 항목이 최대 7개까지 조밀하게 보임 */
+/* TODO는 한 열 전체 폭. 평일 최대 10개까지 등록 가능 */
 #week .tasks{
   display:block !important;
   flex:1 1 auto !important;
@@ -1696,11 +1696,7 @@ html,body{
 .home-quick.memo{background:#fff5de}.home-quick.meeting{background:#e5f4ec}
 @media(max-width:850px){.home-quick-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.home-overview{grid-template-columns:1fr}}
 
-/* v12.24: 홈에서는 중복되는 상단 메뉴를 숨기고, 각 상세 화면에서는 유지 */
-.tab-app.home-active .main-tabs .tab-btn[data-view="monthly"],
-.tab-app.home-active .main-tabs .tab-btn[data-view="weekly"],
-.tab-app.home-active .main-tabs .tab-btn[data-view="stickies"],
-.tab-app.home-active .main-tabs .tab-btn[data-view="notepad"]{display:none !important}
+/* v12.35: 홈에서도 월간계획·주간계획·메모·회의록 전체 탭 표시 */
 .tab-app.home-active .tab-top{grid-template-columns:auto 1fr auto !important}
 .tab-app.home-active .main-tabs{justify-content:center !important}
 @media(max-width:900px){
@@ -1763,6 +1759,43 @@ body:has(.tab-app.home-active){height:100%;overflow-y:hidden!important}
  .tab-app.home-active .home-page{grid-template-rows:minmax(0, .9fr) minmax(0, 1.1fr)!important;gap:6px!important}
  .tab-app.home-active .home-mini-event-list{display:none!important}
  .tab-app.home-active .home-card-header{margin-bottom:3px!important}
+}
+</style>
+
+<style>
+/* v12.33: 평일 TODO 10개 표시를 위한 내부 스크롤 */
+#week .tasks {
+  overflow-y: auto !important;
+  overflow-x: hidden !important;
+  min-height: 0 !important;
+  overscroll-behavior: contain;
+}
+</style>
+<style>
+/* v12.36: 모든 상단 탭을 흰색 배경 + 선택한 테마의 테두리로 통일 */
+.tab-app .tab-top .tab-btn,
+.tab-app .tab-top .tab-btn[data-view="home"],
+.tab-app .tab-top .tab-btn[data-view="monthly"],
+.tab-app .tab-top .tab-btn[data-view="weekly"],
+.tab-app .tab-top .tab-btn[data-view="stickies"],
+.tab-app .tab-top .tab-btn[data-view="notepad"],
+.tab-app .tab-top #settingsBtn {
+  background:#fff !important;
+  border:1px solid var(--accent) !important;
+  color:var(--accent) !important;
+  outline:none !important;
+  filter:none !important;
+}
+.tab-app .tab-top .tab-btn.active {
+  background:#fff !important;
+  border:2px solid var(--accent) !important;
+  color:var(--accent) !important;
+  outline:none !important;
+  box-shadow:0 0 0 2px var(--soft) !important;
+}
+.tab-app .tab-top .tab-btn:hover {
+  background:#fff !important;
+  box-shadow:0 2px 7px rgba(0,0,0,.09) !important;
 }
 </style>
 </head>
@@ -2324,13 +2357,13 @@ async function addTask(k,input,col){
 
   const taskDate=new Date(k+'T00:00:00');
   const taskDay=taskDate.getDay();
-  const maxTasks=(taskDay===0||taskDay===6)?2:7;
+  const maxTasks=(taskDay===0||taskDay===6)?2:10;
   const currentTotal=(tasks[k]||[]).length;
 
   if(currentTotal>=maxTasks){
     alert(taskDay===0||taskDay===6
       ? '토·일은 할 일을 최대 2개까지 등록할 수 있어요.'
-      : '평일은 할 일을 최대 7개까지 등록할 수 있어요.');
+      : '평일은 할 일을 최대 10개까지 등록할 수 있어요.');
     return;
   }
 
