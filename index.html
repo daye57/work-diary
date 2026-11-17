@@ -1798,6 +1798,13 @@ body:has(.tab-app.home-active){height:100%;overflow-y:hidden!important}
   box-shadow:0 2px 7px rgba(0,0,0,.09) !important;
 }
 </style>
+<style>
+/* v12.37: 주간계획에서만 일정 완료 표시. 월간계획 원본에는 영향 없음 */
+#week .week-event{display:flex!important;align-items:flex-start;gap:5px}
+#week .week-event-check{flex:0 0 auto;width:12px;height:12px;margin:1px 0 0;accent-color:var(--accent,#bd8e9b);cursor:pointer}
+#week .week-event-text{min-width:0;flex:1;cursor:pointer;overflow-wrap:anywhere}
+#week .week-event-checked .week-event-text{text-decoration:line-through;opacity:.58}
+</style>
 </head>
 <body>
 <div class="app tab-app home-active">
@@ -2252,6 +2259,54 @@ function renderCal(){
  })
 }
 
+// 주간계획 전용 일정 체크: 월간 일정(event)과 분리된 note 행에 저장
+const WEEK_SCHEDULE_CHECK_POSITION='weeklyScheduleChecksV1';
+const weeklyScheduleCheckPending=new Map();
+function weeklyScheduleCheckKey(dateStr){
+  const [y,m,d]=dateStr.split('-').map(Number);
+  return key(monday(new Date(y,m-1,d)));
+}
+function readWeeklyScheduleChecks(weekKey){
+  const raw=notes[`${weekKey}:${WEEK_SCHEDULE_CHECK_POSITION}`]?.text;
+  if(!raw)return {};
+  try{
+    const parsed=JSON.parse(raw);
+    return parsed && typeof parsed==='object' && !Array.isArray(parsed) ? parsed : {};
+  }catch(e){return {};}
+}
+async function setWeeklyScheduleChecked(dateStr,eventId,checked){
+  const wk=weeklyScheduleCheckKey(dateStr);
+  const noteKey=`${wk}:${WEEK_SCHEDULE_CHECK_POSITION}`;
+  // 같은 주에 연속 체크해도 업데이트가 역전되지 않도록 순차 처리
+  const previous=weeklyScheduleCheckPending.get(wk)||Promise.resolve();
+  const work=previous.catch(()=>{}).then(async()=>{
+    const current=readWeeklyScheduleChecks(wk);
+    const updated={...current};
+    if(checked)updated[String(eventId)]=true;
+    else delete updated[String(eventId)];
+    const content=JSON.stringify(updated);
+    const existing=notes[noteKey];
+    if(existing){
+      await apiPost({action:'update',id:existing.id,content});
+      existing.text=content;
+    }else{
+      const result=await apiPost({action:'add',type:'note',date:wk,position:WEEK_SCHEDULE_CHECK_POSITION,content,done:false});
+      if(!result?.id)throw new Error('체크 상태 저장 ID를 받지 못했습니다.');
+      notes[noteKey]={id:result.id,text:content};
+    }
+  });
+  weeklyScheduleCheckPending.set(wk,work);
+  try{await work;renderWeek();}
+  catch(err){
+    console.error('주간 일정 체크 저장 실패:',err);
+    setSync('일정 체크 저장 실패','error');
+    alert('주간계획의 일정 체크 상태를 저장하지 못했습니다. 다시 시도해주세요.');
+    renderWeek();
+  }finally{
+    if(weeklyScheduleCheckPending.get(wk)===work)weeklyScheduleCheckPending.delete(wk);
+  }
+}
+
 function renderWeek(){
  let end=new Date(weekStart);end.setDate(end.getDate()+6);
  $('#wr').textContent=`${weekStart.getMonth()+1}.${weekStart.getDate()} — ${end.getMonth()+1}.${end.getDate()}`;
@@ -2285,10 +2340,14 @@ function renderWeek(){
        </div>
      </div>`;
    const dayEvents=events[k]||[];
+   const weeklyChecks=readWeeklyScheduleChecks(key(weekStart));
    const eventHtml=`<div class="week-events">
      <div class="week-events-label">SCHEDULE</div>
      ${dayEvents.length
-       ? dayEvents.map(e=>`<div class="week-event ${e.color?'mark-'+e.color:''}" data-week-event="${e.id}" data-date="${k}">${esc(e.text)}</div>`).join('')
+       ? dayEvents.map(e=>`<div class="week-event ${e.color?'mark-'+e.color:''} ${weeklyChecks[String(e.id)]?'week-event-checked':''}">
+           <input type="checkbox" class="week-event-check" data-week-check="${esc(String(e.id))}" data-date="${k}" ${weeklyChecks[String(e.id)]?'checked':''} aria-label="주간계획 일정 완료 체크">
+           <span class="week-event-text" data-week-event="${esc(String(e.id))}" data-date="${k}">${esc(e.text)}</span>
+         </div>`).join('')
        : '<div class="week-event-empty">등록된 일정 없음</div>'}
    </div>`;
    html+=`<div class="wday">
@@ -2316,6 +2375,7 @@ function renderWeek(){
  document.querySelectorAll('.task input[type="checkbox"]').forEach(x=>x.onchange=()=>updateTask(x.dataset.id,x.checked));
  document.querySelectorAll('[data-del]').forEach(x=>x.onclick=()=>deleteTask(x.dataset.del));
  document.querySelectorAll('[data-add]').forEach(x=>x.onkeydown=e=>{if(e.key==='Enter')addTask(x.dataset.add,x,+x.dataset.col)});
+ document.querySelectorAll('[data-week-check]').forEach(el=>el.onchange=()=>setWeeklyScheduleChecked(el.dataset.date,el.dataset.weekCheck,el.checked));
  document.querySelectorAll('[data-week-event]').forEach(el=>el.onclick=e=>{
    e.stopPropagation();
    const k=el.dataset.date,id=el.dataset.weekEvent;
