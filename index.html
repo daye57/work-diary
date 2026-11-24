@@ -1805,6 +1805,24 @@ body:has(.tab-app.home-active){height:100%;overflow-y:hidden!important}
 #week .week-event-text{min-width:0;flex:1;cursor:pointer;overflow-wrap:anywhere}
 #week .week-event-checked .week-event-text{text-decoration:line-through;opacity:.58}
 </style>
+<style>
+/* v12.38: 하단 주간 메모 단일 편집기 */
+#week > .notes.week-unified-notes{
+  display:block!important;
+  grid-column:1 / -1!important;
+  grid-template-columns:none!important;
+  width:100%!important;
+  min-width:0!important;
+  box-sizing:border-box!important;
+}
+#week > .notes.week-unified-notes > .week-unified-note{display:block!important;width:100%!important;max-width:none!important;min-width:0!important;height:100%;box-sizing:border-box;background:#fff!important;padding:0!important}
+.week-memo-head{display:flex;align-items:center;gap:12px;margin-bottom:6px}
+.week-memo-head h3{margin:0!important}
+.week-strike-btn{border:1px solid var(--line);border-radius:6px;background:#fff;color:var(--ink);padding:4px 10px;cursor:pointer;font-size:11px}
+.week-memo-editor{width:100%;box-sizing:border-box;min-height:95px;max-height:240px;overflow-y:auto;border:1px solid var(--line);border-radius:8px;background:#fff;padding:10px;font:12px/1.8 "Noto Sans KR","Malgun Gothic",sans-serif;white-space:pre-wrap;overflow-wrap:anywhere;outline:none}
+.week-memo-editor:empty:before{content:attr(data-placeholder);color:#a2aab6;pointer-events:none}
+.week-memo-editor:focus{border-color:var(--accent,var(--line))}
+</style>
 </head>
 <body>
 <div class="app tab-app home-active">
@@ -2307,6 +2325,40 @@ async function setWeeklyScheduleChecked(dateStr,eventId,checked){
   }
 }
 
+// v12.38: 주간 메모 통합. 기존 week/memo 행은 보존하고 새 통합 메모를 별도 행에 저장.
+const WEEK_UNIFIED_MEMO='unifiedMemoV1';
+const WEEK_RICH_PREFIX='[[WEEK_RICH_V1]]';
+const weekMemoSaveQueues=new Map();
+function safeWeekMemoHtml(html){
+  const doc=new DOMParser().parseFromString('<div>'+String(html)+'</div>','text/html');
+  const root=doc.body.firstElementChild;
+  function clean(node){
+    if(node.nodeType===3)return esc(node.nodeValue);
+    if(node.nodeType!==1)return '';
+    const tag=node.tagName.toLowerCase();
+    if(tag==='br')return '<br>';
+    const children=Array.from(node.childNodes).map(clean).join('');
+    if(['s','strike','del'].includes(tag) || (node.style && node.style.textDecorationLine.includes('line-through')))
+      return '<s>'+children+'</s>';
+    if(tag==='div'||tag==='p')return '<div>'+children+'</div>';
+    return children;
+  }
+  return Array.from(root.childNodes).map(clean).join('');
+}
+function weekMemoInitial(wk){
+  const saved=notes[`${wk}:${WEEK_UNIFIED_MEMO}`]?.text;
+  if(saved!==undefined)return saved.startsWith(WEEK_RICH_PREFIX)?safeWeekMemoHtml(saved.slice(WEEK_RICH_PREFIX.length)):esc(saved).replace(/\\n/g,'<br>');
+  const legacyWeek=notes[`${wk}:week`]?.text||'';
+  const legacyMemo=notes[`${wk}:memo`]?.text||'';
+  return [legacyWeek,legacyMemo].filter(Boolean).map(t=>esc(t).replace(/\\n/g,'<br>')).join('<div><br></div>');
+}
+function saveUnifiedWeekMemo(wk,editor){
+  const content=WEEK_RICH_PREFIX+safeWeekMemoHtml(editor.innerHTML);
+  const prior=weekMemoSaveQueues.get(wk)||Promise.resolve();
+  const next=prior.catch(()=>{}).then(()=>saveNote(wk,WEEK_UNIFIED_MEMO,content));
+  weekMemoSaveQueues.set(wk,next);
+  next.finally(()=>{if(weekMemoSaveQueues.get(wk)===next)weekMemoSaveQueues.delete(wk)});
+}
 function renderWeek(){
  let end=new Date(weekStart);end.setDate(end.getDate()+6);
  $('#wr').textContent=`${weekStart.getMonth()+1}.${weekStart.getDate()} — ${end.getMonth()+1}.${end.getDate()}`;
@@ -2357,20 +2409,33 @@ function renderWeek(){
    </div>`;
  }
  let wk=key(weekStart);
- html+=`<div class="notes">
-   <div class="note"><h3>THIS WEEK</h3><textarea data-note="${wk}:week" placeholder="이번 주에 꼭 기억할 것"></textarea></div>
-   <div class="note"><h3>MEMO</h3><textarea data-note="${wk}:memo" placeholder="자유롭게 메모"></textarea></div>
+ html+=`<div class="notes week-unified-notes">
+   <div class="note week-unified-note">
+     <div class="week-memo-head"><h3>MEMO</h3><button type="button" class="week-strike-btn" title="선택한 글자에 취소선 적용 또는 해제">S̶ 취소선</button></div>
+     <div class="week-memo-editor" contenteditable="true" role="textbox" aria-label="주간 메모" aria-multiline="true" data-week-memo="${wk}" data-placeholder="이번 주 기억할 내용과 메모를 자유롭게 작성하세요">${weekMemoInitial(wk)}</div>
+   </div>
  </div>`;
  $('#week').innerHTML=html;
 
- document.querySelectorAll('[data-note]').forEach(x=>{
-   const [date,position]=x.dataset.note.split(':');
-   x.value=notes[x.dataset.note]?.text||'';
-   x.oninput=()=>{
-     clearTimeout(x._timer);
-     x._timer=setTimeout(()=>saveNote(date,position,x.value),700);
+ const weekEditor=document.querySelector('[data-week-memo]');
+ const strikeBtn=document.querySelector('.week-strike-btn');
+ if(weekEditor){
+   const wk=weekEditor.dataset.weekMemo;
+   const scheduleSave=()=>{
+     clearTimeout(weekEditor._timer);
+     weekEditor._timer=setTimeout(()=>saveUnifiedWeekMemo(wk,weekEditor),700);
    };
- });
+   weekEditor.addEventListener('input',scheduleSave);
+   weekEditor.addEventListener('blur',()=>{
+     if(weekEditor._timer){clearTimeout(weekEditor._timer);weekEditor._timer=null;saveUnifiedWeekMemo(wk,weekEditor);}
+   });
+   strikeBtn.addEventListener('mousedown',e=>e.preventDefault());
+   strikeBtn.addEventListener('click',()=>{
+     weekEditor.focus();
+     document.execCommand('strikeThrough',false,null);
+     scheduleSave();
+   });
+ }
 
  document.querySelectorAll('.task input[type="checkbox"]').forEach(x=>x.onchange=()=>updateTask(x.dataset.id,x.checked));
  document.querySelectorAll('[data-del]').forEach(x=>x.onclick=()=>deleteTask(x.dataset.del));
